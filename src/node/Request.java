@@ -9,7 +9,8 @@ public class Request {
 	 * requestCode			Remark
 	 * 		1			Search the public key
 	 * 		2			Verify the transaction
-	 * 		3 			2 Phase protocol message 		
+	 * 		3 			2 Phase protocol message
+			4 			add public key 		
 	 */
 	private String message;
 	private Transaction txn;
