@@ -10,7 +10,13 @@ public class NodeThread extends Thread {
 	
 	public void run() {
 		try {
-			wait();
+			synchronized(DriverProgram.requestQueue) {
+				DriverProgram.requestQueue.wait();
+				Request r = DriverProgram.requestQueue.peek();
+				if(r.getRequestCode() == -1) {
+					System.out.println("hello I am a thread and my name is " + getName());
+				}
+			}
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
