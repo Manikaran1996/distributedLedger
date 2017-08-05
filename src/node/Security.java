@@ -17,10 +17,15 @@ public class Security {
 	
 	private PrivateKey privateKey;
 	private PublicKey publicKey;
+	private String nodeName;
 	
 	public Security() {
 		privateKey = null;
 		publicKey = null;
+	}
+	
+	public Security(String nodeName) {
+		this.nodeName = nodeName;
 	}
 	
 	public byte[] getHash(String msg) {
