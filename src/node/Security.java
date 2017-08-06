@@ -58,14 +58,14 @@ public class Security {
 		if(privateKey == null) {
 			generateKeyPair();
 		}
-		return privateKey.toString();
+		return bytesToString(privateKey.getEncoded()); //earlier toString was returning extra information than the key itself 
 	}
 	
 	public String getPublicKey() {
 		if(publicKey == null) {
 			generateKeyPair();
 		}
-		return publicKey.toString();
+		return bytesToString(publicKey.getEncoded()); //earlier toString was returning extra information than the key itself
 	}
 	
 	private byte[] encrypt (byte[] plainText) {
@@ -134,7 +134,7 @@ public class Security {
 		return false;
 	}
 	
-	private String bytesToString(byte[] msg) {
+	public String bytesToString(byte[] msg) {
 		StringBuffer buffer = new StringBuffer("");
 		for(int i=0;i<msg.length;i++) {
 			buffer.append(Integer.toString((msg[i]&0xff),16));
