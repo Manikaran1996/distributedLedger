@@ -1,5 +1,6 @@
 package node;
 
+import java.io.File;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -143,6 +144,10 @@ public class Security {
 		return buffer.toString();
 	}
 	
+	public boolean saveKey() {
+		File dir = null; 
+		return true;
+	}
 	public static void main(String[] args) {
 		Security testObject = new Security();
 		String msg = "Hello, this is the trial msg";
