@@ -37,9 +37,13 @@ public class DriverProgram {
 	}
 	
 	public static void main(String[] args) {
-
-		new DriverProgram().createARequest();
+		NodeThread sender = new NodeThread("sender", null);
+		NodeThread receiver = new NodeThread("receiver", null);
+		NodeThread witness = new NodeThread("witness", null);
+		sender.commitTransaction();
+		new DriverProgram();
 	}
+	
 	
 	public void createARequest() {
 

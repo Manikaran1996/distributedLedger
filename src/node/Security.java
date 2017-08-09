@@ -144,8 +144,14 @@ public class Security {
 		return buffer.toString();
 	}
 	
+	//TODO
 	public boolean saveKey() {
-		File dir = null; 
+		String path = "/home/manikaran/M.tech/Software Lab/Nodes/" + nodeName;
+		File dir = new File(path);
+		boolean created = false;
+		if(!dir.exists())
+			created = dir.mkdirs();
+		
 		return true;
 	}
 	public static void main(String[] args) {

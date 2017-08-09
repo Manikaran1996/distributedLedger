@@ -3,8 +3,9 @@ package node;
 import java.util.Scanner;
 
 public class Request {
+	enum RequestCodes {SEARCH, VERIFY, TWO_PHASE,  ADD_KEY, DEFAULT};
 	private String to;
-	private int requestCode;
+	private RequestCodes requestCode;
 	/* 
 	 * requestCode			Remark
 	 * 		1			Search the public key
@@ -14,29 +15,64 @@ public class Request {
 	 */
 	private String message;
 	private Transaction txn;
-	private String name;
+	private String sender;
+	
+	public void setRecipient(String to) {
+		this.to= to;
+	}
+	
+	public String getRecipient() {
+		return to;
+	}
+	
+	public void setMessage(String msg) {
+		this.message = msg;
+	}
+	
+	public String getMessage() {
+		return this.message;
+	}
+	
+	public void setRequestCode(RequestCodes code) {
+		requestCode = code;
+	}
+	
+	public void setSender(String sender) {
+		this.sender = sender;
+	}
+	
+	public String getSender() {
+		return sender;
+	}
+	
+	public RequestCodes getRequestCode() {
+		return requestCode;
+	}
 	
 	public void createTransactionRequest(Transaction txn) {
 		Scanner sc = new Scanner(System.in);
 		System.out.print("To : ");
 		to = sc.next();
-		this.txn = txn;
-		requestCode = 2;
+		this.txn = txn;;
 	}
 	
 	public void createSearchKeyRequest() {
-		requestCode = 1;
+		requestCode = RequestCodes.SEARCH;
 	
-	}
-	public void createProtocolMessageRequest() {
-		requestCode = 3;
 	}
 	
 	public void genericRequest() {
-		requestCode = -1;
+		requestCode = RequestCodes.DEFAULT;
 	}
 	
-	public int getRequestCode() {
-		return requestCode;
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("To : ");
+		builder.append(to);
+		builder.append("Request Code : ");
+		builder.append(requestCode);
+		builder.append("Message : ");
+		builder.append(message);
+		return builder.toString();
 	}
 }
