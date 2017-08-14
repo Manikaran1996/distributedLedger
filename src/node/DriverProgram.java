@@ -3,18 +3,21 @@ package node;
 import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.Queue;
+
+import node.Request.RequestCodes;
+
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Arrays;
 public class DriverProgram {
 	
-	public static Queue<Request> requestQueue = new LinkedList<Request>();
 	private static Security security=new Security(); //added to access security features
 	
 	//added : nodeList to store threads
 	public static NodeThread nodeList[];
 	public static int n; // number of nodes
 	//main DHT function that sets the previous and next pointers of nodes
-	public static void buildDHT() {
+	/* public static void buildDHT() {
 		Integer tempList[]=new Integer[n];
 		for(int i=0;i<n;i++) tempList[i]=i;
 		Arrays.sort(tempList,new Comparator<Integer>() {
@@ -34,18 +37,25 @@ public class DriverProgram {
 		}
 		for(int i=0;i<n;i++) nodeList[i].DHTcurr=i;
 		
-	}
+	} */
 	
 	public static void main(String[] args) {
-		NodeThread sender = new NodeThread("sender", null);
-		NodeThread receiver = new NodeThread("receiver", null);
-		NodeThread witness = new NodeThread("witness", null);
-		sender.commitTransaction();
+		HashMap<String, NodeThread> hashMap = new HashMap<String, NodeThread>();
+		NodeThread sender = new NodeThread("sender", hashMap);
+		NodeThread receiver = new NodeThread("receiver", hashMap);
+		NodeThread witness = new NodeThread("witness", hashMap);
+		hashMap.put("sender", sender);
+		hashMap.put("receiver", receiver);
+		hashMap.put("witness", witness);
+		Request request = new Request();
+		request.setRequestCode(RequestCodes.COMMIT);
+		sender.putRequest(request);
+		//sender.commitTransaction();
 		new DriverProgram();
 	}
 	
 	
-	public void createARequest() {
+	/* public void createARequest() {
 
 		n=4;
 		nodeList=new NodeThread[n];
@@ -64,6 +74,6 @@ public class DriverProgram {
 		synchronized(requestQueue) {
 			requestQueue.notifyAll();
 		}
-	}
+	} */
 	
 }

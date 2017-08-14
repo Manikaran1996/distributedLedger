@@ -3,21 +3,103 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ListIterator;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import node.Request.RequestCodes;
 import node.TwoPhaseProtocol.MessageCodes;
 
 public class NodeThread extends Thread {
+	
+	private BlockingQueue<Request> mailBox;
 	int DHTprev=-1;
 	int DHTnext=-1;
 	int DHTcurr=-1;
 	String pubKey,priKey; //added data member to store keys
 	Security security; //to use hash/key generation
-	HashMap<String,String> DHTable=new HashMap<String,String>();
-	NodeThread nList[];//rather than referencing DriverProgram for list of ThreadNode, kept a reference through constructor
+	HashMap<String,String> DHTable;
+	HashMap<String, NodeThread> threadMap;
+	private CommitThread commitThread;
 	//DHT functions
 	private static final BigInteger DHT_MAX=new BigInteger("10000000000000000000000000000000000000000",16); //=2**160
-	private BigInteger DHTDistance(String i,String j) {
+	public NodeThread(String threadName, HashMap<String, NodeThread> map) {
+		super(threadName);
+		mailBox = new LinkedBlockingQueue<Request>();
+		DHTable = new HashMap<String,String>();
+		threadMap = map;
+		commitThread = null;
+		start();
+	}
+	
+
+	
+	public void run() {
+		/*try {
+			security=new Security();
+			pubKey=security.getPublicKey();
+			priKey=security.getPrivateKey();
+			synchronized(DriverProgram.requestQueue) {
+				DriverProgram.requestQueue.wait();
+				putDHTValue(getName(),pubKey); // using thread name itself as key hence will map to itselfs
+				putDHTValue("Node"+(DHTcurr+4),"dummy"); //dummy to show storage of extra nodes for testing 
+				Request r = DriverProgram.requestQueue.peek();
+				if(r.getRequestCode() == RequestCodes.DEFAULT) {
+					System.out.println("Hello I am a thread and my name is " + getName());
+				}
+			getDHTValue(getName());
+			getDHTValue("Node"+(DHTcurr+4));
+			}
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+		
+		do {
+			Request request;
+			try {
+				request = mailBox.take();
+				if(request.getRequestCode() == RequestCodes.COMMIT) {
+					commitTransaction("receiver", "witness");
+				}
+				else if(request.getRecipient() == getName()) {
+					if(request.getRequestCode() == RequestCodes.TWO_PHASE) {
+						if(request.getMessage().equals(String.valueOf(MessageCodes.PREPARE))) {
+							Request readyReply = TwoPhaseProtocol.getReadyMessage(getName(), request.getSender());
+							NodeThread t = threadMap.get(request.getSender());
+							t.putRequest(readyReply);
+						}
+						else if(request.getMessage().equals(String.valueOf(MessageCodes.COMMIT))) {
+							Request commitReply = TwoPhaseProtocol.getCommitAckMessage(getName(), request.getSender());
+							NodeThread t = threadMap.get(request.getSender());
+							t.putRequest(commitReply);
+						}
+					}
+					else if(request.getRequestCode() == RequestCodes.TWO_PHASE_REPLY) {
+						if(commitThread != null) {
+							commitThread.putRequest(request);
+						}
+					}
+				}
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		} while(true);
+	}
+	
+	
+	public void putRequest(Request req) {
+		try {
+			mailBox.put(req);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/* private BigInteger DHTDistance(String i,String j) {
 		BigInteger bi=new BigInteger(i,16);
 		BigInteger bj=new BigInteger(j,16);
 		switch(bi.compareTo(bj)) {
@@ -50,58 +132,7 @@ public class NodeThread extends Thread {
 		int reqNode=DHTFindNode(keyVal);
 		DriverProgram.nodeList[reqNode].DHTable.put(keyVal,Value);
 		System.out.println("Node "+(reqNode+1) + "stored value of "+keyVal+ " as "+Value);
-		}
-	public NodeThread(String threadName,NodeThread nt[]) {
-		super(threadName);
-		nList=nt;
-		start();
-	}
-	
-	public void run() {
-		/*try {
-			security=new Security();
-			pubKey=security.getPublicKey();
-			priKey=security.getPrivateKey();
-			synchronized(DriverProgram.requestQueue) {
-				DriverProgram.requestQueue.wait();
-				putDHTValue(getName(),pubKey); // using thread name itself as key hence will map to itselfs
-				putDHTValue("Node"+(DHTcurr+4),"dummy"); //dummy to show storage of extra nodes for testing 
-				Request r = DriverProgram.requestQueue.peek();
-				if(r.getRequestCode() == RequestCodes.DEFAULT) {
-					System.out.println("Hello I am a thread and my name is " + getName());
-				}
-			getDHTValue(getName());
-			getDHTValue("Node"+(DHTcurr+4));
-			}
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
-		while(true) {
-			synchronized(this) {
-				try {
-					wait();
-					System.out.println(getName() + " awake ");
-					Iterator<Request> iterator = DriverProgram.requestQueue.iterator();
-					while(iterator.hasNext()) {
-						Request r = iterator.next();
-						if(r.getRecipient() == getName()) {
-							iterator.remove();
-							if(r.getRequestCode() == RequestCodes.TWO_PHASE) {
-								if(r.getMessage().equals(String.valueOf(MessageCodes.PREPARE))) {
-									Request readyReply = TwoPhaseProtocol.getReadyMessage(getName(), "sender");
-									DriverProgram.requestQueue.add(readyReply);
-								}
-							}
-						}
-					}
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-	}
+		} */
 	
 	public String query(String nodeName) {
 		return null;
@@ -111,25 +142,38 @@ public class NodeThread extends Thread {
 		return null;
 	}
 	
-	public synchronized boolean commitTransaction() {
+	/* public boolean commitTransaction() {
 		// Start Two phase protocol
 		Request prepareMessageReceiver = TwoPhaseProtocol.getPrepareMessage(getName(), "receiver"); // hard-coding for now, will be using DHT.
 		Request prepareMessageWitness = TwoPhaseProtocol.getPrepareMessage(getName(), "witness"); // hard-coding for now, will be using DHT.
-		DriverProgram.requestQueue.add(prepareMessageReceiver);
-		DriverProgram.requestQueue.add(prepareMessageWitness);
-		try {
-			notifyAll();
-			wait(2000);
-			Iterator<Request> iterator = DriverProgram.requestQueue.iterator();
-			boolean receiverReady = false, witnessReady = false;
-			while(iterator.hasNext() && (!receiverReady || !witnessReady)) {
+		NodeThread receiver = threadMap.get("receiver");
+		NodeThread witness = threadMap.get("witness");
+		receiver.putRequest(prepareMessageReceiver);
+		witness.putRequest(prepareMessageWitness);
+		boolean receiverReady = false, witnessReady = false;
+		Thread.sleep(2000);
+		Request temp = mailBox.poll(5, TimeUnit.SECONDS);
+		if(temp == null) {
+			//abort
+		}
+		else {
+			if(temp.getRecipient() == getName()) {
+				if(temp.getRequestCode() == RequestCodes.TWO_PHASE) {
+					if(temp.getMessage().equals(String.valueOf(MessageCodes.READY)))
+						receiverReady = true;
+				}
+				else {
+					// take the required action
+				}
+			}
+		}
+		while(iterator.hasNext() && (!receiverReady || !witnessReady)) {
 				Request temp = iterator.next();
 				if(temp.getRecipient() == getName() && temp.getRequestCode() == RequestCodes.TWO_PHASE) {
 					String messageFrom = temp.getSender();
 					if(messageFrom.equals("receiver")) {
 						iterator.remove();
-						if(temp.getMessage().equals(String.valueOf(MessageCodes.READY)))
-							receiverReady = true;
+						
 						else
 							break;
 					}
@@ -191,7 +235,11 @@ public class NodeThread extends Thread {
 			e.printStackTrace();
 		}
 		return false;
-	}
+	} */
 	
+	private void commitTransaction(String rec, String wit) { 
+		commitThread = new CommitThread(getName(), rec, wit, this, threadMap.get(rec), threadMap.get(wit));
+		
+	}
 
 }
