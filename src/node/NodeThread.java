@@ -1,21 +1,17 @@
 package node;
 import java.math.BigInteger;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.ListIterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-
 import node.Request.RequestCodes;
 import node.TwoPhaseProtocol.MessageCodes;
 
 public class NodeThread extends Thread {
 	
 	private BlockingQueue<Request> mailBox;
-	int DHTprev=-1;
-	int DHTnext=-1;
-	int DHTcurr=-1;
+	String DHTprev="";
+	String DHTnext="";
+	String DHTcurr="";
 	String pubKey,priKey; //added data member to store keys
 	Security security; //to use hash/key generation
 	HashMap<String,String> DHTable;
@@ -29,32 +25,28 @@ public class NodeThread extends Thread {
 		DHTable = new HashMap<String,String>();
 		threadMap = map;
 		commitThread = null;
-		start();
-	}
+		DHTcurr=getName();
+		security=new Security();
+		pubKey=security.getPublicKey();
+		priKey=security.getPrivateKey();
+		}
 	
 
 	
 	public void run() {
 		/*try {
-			security=new Security();
-			pubKey=security.getPublicKey();
-			priKey=security.getPrivateKey();
 			synchronized(DriverProgram.requestQueue) {
 				DriverProgram.requestQueue.wait();
-				putDHTValue(getName(),pubKey); // using thread name itself as key hence will map to itselfs
-				putDHTValue("Node"+(DHTcurr+4),"dummy"); //dummy to show storage of extra nodes for testing 
 				Request r = DriverProgram.requestQueue.peek();
 				if(r.getRequestCode() == RequestCodes.DEFAULT) {
 					System.out.println("Hello I am a thread and my name is " + getName());
 				}
-			getDHTValue(getName());
 			getDHTValue("Node"+(DHTcurr+4));
 			}
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}*/
-		
 		do {
 			Request request;
 			try {
@@ -99,7 +91,7 @@ public class NodeThread extends Thread {
 		}
 	}
 	
-	/* private BigInteger DHTDistance(String i,String j) {
+	private BigInteger DHTDistance(String i,String j) {
 		BigInteger bi=new BigInteger(i,16);
 		BigInteger bj=new BigInteger(j,16);
 		switch(bi.compareTo(bj)) {
@@ -110,29 +102,29 @@ public class NodeThread extends Thread {
 			}
 		return BigInteger.ZERO;
 		}
-	private int DHTFindNode(String keyVal) {
-		int currNode=DHTcurr;
+	private String DHTFindNode(String keyVal) {
+		String currNode=DHTcurr;
 		String keyValHash=security.bytesToString(security.getHash(keyVal));
-		BigInteger a=DHTDistance(security.bytesToString(security.getHash(nList[currNode].getName())),keyValHash);
-		BigInteger b=DHTDistance(security.bytesToString(security.getHash(nList[nList[currNode].DHTnext].getName())),keyValHash);
-		while(a.compareTo(b)==1) {
-			currNode=DriverProgram.nodeList[currNode].DHTnext;
-			a=DHTDistance(security.bytesToString(security.getHash(nList[currNode].getName())),keyValHash);
-			b=DHTDistance(security.bytesToString(security.getHash(nList[nList[currNode].DHTnext].getName())),keyValHash);	
+		BigInteger a=DHTDistance(security.bytesToString(security.getHash(currNode)),keyValHash);
+		BigInteger b=DHTDistance(security.bytesToString(security.getHash(threadMap.get(currNode).DHTnext)),keyValHash);
+		while(a.compareTo(b)>=0) {
+			currNode=threadMap.get(currNode).DHTnext;
+			a=DHTDistance(security.bytesToString(security.getHash(currNode)),keyValHash);
+			b=DHTDistance(security.bytesToString(security.getHash(threadMap.get(currNode).DHTnext)),keyValHash);	
 		}
 		return currNode;
 		}
 	synchronized public String getDHTValue(String keyVal) {
-		int reqNode=DHTFindNode(keyVal);
-		String temp= DriverProgram.nodeList[reqNode].DHTable.get(keyVal);
-		System.out.println("Node "+(reqNode+1) + "returns value of "+keyVal+ " as "+temp);
+		String reqNode=DHTFindNode(keyVal);
+		String temp= threadMap.get(reqNode).DHTable.get(keyVal);
+		System.out.println(reqNode + "returns value of "+keyVal+ " as "+temp);
 		return temp;
 		}
 	synchronized public void putDHTValue(String keyVal,String Value) {
-		int reqNode=DHTFindNode(keyVal);
-		DriverProgram.nodeList[reqNode].DHTable.put(keyVal,Value);
-		System.out.println("Node "+(reqNode+1) + "stored value of "+keyVal+ " as "+Value);
-		} */
+		String reqNode=DHTFindNode(keyVal);
+		threadMap.get(reqNode).DHTable.put(keyVal,Value);
+		System.out.println(reqNode + "stored value of "+keyVal+ " as "+Value);
+		} 
 	
 	public String query(String nodeName) {
 		return null;
