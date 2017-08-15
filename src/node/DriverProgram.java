@@ -53,7 +53,7 @@ public class DriverProgram {
 		sender.putDHTValue("sender", sender.pubKey);
 		receiver.putDHTValue("receiver", receiver.pubKey);
 		witness.putDHTValue("witness", witness.pubKey);
-		
+		witness.putDHTValue("demo","demo");
 		sender.start();
 		receiver.start();
 		witness.start();
@@ -63,7 +63,8 @@ public class DriverProgram {
 		sender.getDHTValue("receiver");
 		receiver.getDHTValue("witness");
 		witness.getDHTValue("sender");
-		
+		witness.getDHTValue("demo");
+		witness.getDHTValue("demo");
 		//sender.commitTransaction();
 		new DriverProgram();
 	}

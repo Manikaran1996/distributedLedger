@@ -91,28 +91,19 @@ public class NodeThread extends Thread {
 		}
 	}
 	
-	private BigInteger DHTDistance(String i,String j) {
-		BigInteger bi=new BigInteger(i,16);
-		BigInteger bj=new BigInteger(j,16);
-		switch(bi.compareTo(bj)) {
-		case 0: return BigInteger.ZERO;
-		case -1: return bj.subtract(bi);
-		case 1: bj.subtract(bi);
-				return bj.add(DHT_MAX);
-			}
-		return BigInteger.ZERO;
-		}
 	private String DHTFindNode(String keyVal) {
 		String currNode=DHTcurr;
-		String keyValHash=security.bytesToString(security.getHash(keyVal));
-		BigInteger a=DHTDistance(security.bytesToString(security.getHash(currNode)),keyValHash);
-		BigInteger b=DHTDistance(security.bytesToString(security.getHash(threadMap.get(currNode).DHTnext)),keyValHash);
-		while(a.compareTo(b)>=0) {
+		BigInteger keyValHash=new BigInteger(security.bytesToString(security.getHash(keyVal)),16);
+		BigInteger aBigInteger=new BigInteger(security.bytesToString(security.getHash(currNode)),16);
+		BigInteger bBigInteger=new BigInteger(security.bytesToString(security.getHash(threadMap.get(currNode).DHTnext)),16);
+		do{
+			if(keyValHash.compareTo(aBigInteger)==0) return currNode;
+			if(aBigInteger.compareTo(bBigInteger)<0 && keyValHash.compareTo(bBigInteger)<0 && aBigInteger.compareTo(keyValHash)<0) return threadMap.get(currNode).DHTnext;
+			if(aBigInteger.compareTo(bBigInteger)>0 && (keyValHash.compareTo(aBigInteger)>0 || (keyValHash.compareTo(aBigInteger)<0 && keyValHash.compareTo(bBigInteger)<0))) return threadMap.get(currNode).DHTnext;
 			currNode=threadMap.get(currNode).DHTnext;
-			a=DHTDistance(security.bytesToString(security.getHash(currNode)),keyValHash);
-			b=DHTDistance(security.bytesToString(security.getHash(threadMap.get(currNode).DHTnext)),keyValHash);	
-		}
-		return currNode;
+			aBigInteger=new BigInteger(security.bytesToString(security.getHash(currNode)),16);
+			bBigInteger=new BigInteger(security.bytesToString(security.getHash(threadMap.get(currNode).DHTnext)),16);
+		}while(true);
 		}
 	synchronized public String getDHTValue(String keyVal) {
 		String reqNode=DHTFindNode(keyVal);
