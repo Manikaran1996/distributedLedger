@@ -50,9 +50,9 @@ public class DriverProgram {
 		hashMap.put("receiver", receiver);
 		hashMap.put("witness",witness);
 		buildDHT();
-		sender.putDHTValue("sender", sender.pubKey);
-		receiver.putDHTValue("receiver", receiver.pubKey);
-		witness.putDHTValue("witness", witness.pubKey);
+		//sender.putDHTValue("sender", sender.pubKey);
+		//receiver.putDHTValue("receiver", receiver.pubKey);
+		//witness.putDHTValue("witness", witness.pubKey);
 		witness.putDHTValue("demo","demo");
 		sender.start();
 		receiver.start();
@@ -60,6 +60,15 @@ public class DriverProgram {
 		Request request = new Request();
 		request.setRequestCode(RequestCodes.COMMIT);
 		sender.putRequest(request);
+		Thread t=Thread.currentThread();
+		synchronized (t) {
+			try {
+				t.wait(500);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	
+		}
 		sender.getDHTValue("receiver");
 		receiver.getDHTValue("witness");
 		witness.getDHTValue("sender");

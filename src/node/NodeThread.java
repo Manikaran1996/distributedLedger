@@ -47,12 +47,30 @@ public class NodeThread extends Thread {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}*/
+		putDHTValue(DHTcurr,pubKey);
 		do {
 			Request request;
 			try {
 				request = mailBox.take();
 				if(request.getRequestCode() == RequestCodes.COMMIT) {
 					commitTransaction("receiver", "witness");
+				}
+				else if(request.getRequestCode()==RequestCodes.ADD_KEY) {
+					DHTable.put(request.getSender(), request.getMessage());
+					System.out.println(getName() + " added public key of "+request.getSender()+" as "+request.getMessage());
+				}
+				else if(request.getRequestCode()==RequestCodes.SEARCH) {
+					String s=DHTable.get(request.getMessage());
+					Request replyRequest=new Request();
+					replyRequest.setRequestCode(RequestCodes.SEARCH_REPLY);
+					replyRequest.setSender(DHTcurr);
+					replyRequest.setRecipient(request.getSender());
+					replyRequest.setMessage(request.getMessage()+":"+s);
+					threadMap.get(replyRequest.getRecipient()).putRequest(replyRequest);
+				}
+				else if(request.getRequestCode()==RequestCodes.SEARCH_REPLY) {
+					String reply[]=request.getMessage().split(":");
+					System.out.println("at" + DHTcurr +" received public key of "+reply[0]+" from "+request.getSender()+" as "+reply[1]);
 				}
 				else if(request.getRecipient() == getName()) {
 					if(request.getRequestCode() == RequestCodes.TWO_PHASE) {
@@ -105,16 +123,27 @@ public class NodeThread extends Thread {
 			bBigInteger=new BigInteger(security.bytesToString(security.getHash(threadMap.get(currNode).DHTnext)),16);
 		}while(true);
 		}
-	synchronized public String getDHTValue(String keyVal) {
+	synchronized public void getDHTValue(String keyVal) {
 		String reqNode=DHTFindNode(keyVal);
-		String temp= threadMap.get(reqNode).DHTable.get(keyVal);
-		System.out.println(reqNode + "returns value of "+keyVal+ " as "+temp);
-		return temp;
+		Request r =new Request();
+		r.setRequestCode(RequestCodes.SEARCH);
+		r.setSender(DHTcurr);
+		r.setRecipient(reqNode);
+		r.setMessage(keyVal);
+		threadMap.get(reqNode).putRequest(r);
+		//String temp= threadMap.get(reqNode).DHTable.get(keyVal);
+		//System.out.println(reqNode + "returns value of "+keyVal+ " as "+temp);
+		//return temp;
 		}
-	synchronized public void putDHTValue(String keyVal,String Value) {
-		String reqNode=DHTFindNode(keyVal);
-		threadMap.get(reqNode).DHTable.put(keyVal,Value);
-		System.out.println(reqNode + "stored value of "+keyVal+ " as "+Value);
+	synchronized public void putDHTValue(String key,String Value) {
+		String reqNode=DHTFindNode(key);
+		Request r= new Request();
+		r.setRequestCode(RequestCodes.ADD_KEY);
+		r.setRecipient(reqNode);
+		r.setSender(key);
+		r.setMessage(Value);
+		threadMap.get(reqNode).putRequest(r);//threadMap.get(reqNode).DHTable.put(keyVal,Value);
+		//System.out.println(reqNode + "stored value of "+DHTcurr+ " as "+Value);
 		} 
 	
 	public String query(String nodeName) {

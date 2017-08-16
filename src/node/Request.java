@@ -3,12 +3,12 @@ package node;
 import java.util.Scanner;
 
 public class Request {
-	enum RequestCodes {SEARCH, VERIFY, TWO_PHASE,  ADD_KEY, DEFAULT, TWO_PHASE_REPLY, COMMIT};
+	enum RequestCodes {SEARCH, VERIFY, TWO_PHASE,  ADD_KEY,SEARCH_REPLY, DEFAULT, TWO_PHASE_REPLY, COMMIT};
 	private String to;
 	private RequestCodes requestCode;
 	/* 
 	 * requestCode			Remark
-	 * 		1			Search the public key
+	 * 		1			Search the public key ( request)
 	 * 		2			Verify the transaction
 	 * 		3 			2 Phase protocol message
 			4 			add public key 		
@@ -60,7 +60,6 @@ public class Request {
 		requestCode = RequestCodes.SEARCH;
 	
 	}
-	
 	public void genericRequest() {
 		requestCode = RequestCodes.DEFAULT;
 	}
