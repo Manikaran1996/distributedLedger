@@ -135,7 +135,7 @@ public class Security {
 		return false;
 	}
 	
-	public String bytesToString(byte[] msg) {
+	public static String bytesToString(byte[] msg) {
 		StringBuffer buffer = new StringBuffer("");
 		for(int i=0;i<msg.length;i++) {
 			buffer.append(Integer.toString((msg[i]&0xff),16));

@@ -1,5 +1,7 @@
 package transaction;
 
+import node.Security;
+
 public class Output {
 	double value;
 	byte[] hashOfReceiverKey;
@@ -18,5 +20,12 @@ public class Output {
 	
 	public void setHash(byte[] hash) {
 		hashOfReceiverKey = hash;
+	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Value : " + value);
+		builder.append("\nHash : " + Security.bytesToString(hashOfReceiverKey));
+		return builder.toString();
 	}
 }

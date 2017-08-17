@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import node.Request.RequestCodes;
+import transaction.Transaction;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -13,11 +14,17 @@ import java.util.Iterator;
 import java.util.Set;
 public class DriverProgram {
 	
-	private static Security security=new Security(); //added to access security features
-	static HashMap<String, NodeThread> hashMap = new HashMap<String, NodeThread>();
+	private Security security=new Security(); //added to access security features
+	private HashMap<String, NodeThread> hashMap = new HashMap<String, NodeThread>();
+	private LinkedList<Transaction> txnList;
+	
+	public DriverProgram() {
+		txnList = new LinkedList<Transaction>();
+	}
+	
 	//main DHT function that sets the previous and next pointers of nodes
-	public static void buildDHT() {
-		int n=hashMap.size();
+	public void buildDHT() {
+		int n= hashMap.size();
 		Set<String> namesSet=hashMap.keySet(); 
 		String tempList[]=new String[n];
 		int ind=0;
@@ -43,17 +50,34 @@ public class DriverProgram {
 	} 
 	
 	public static void main(String[] args) {
-		NodeThread sender = new NodeThread("sender", hashMap);
+		/* NodeThread sender = new NodeThread("sender", hashMap);
 		NodeThread receiver = new NodeThread("receiver", hashMap);
 		NodeThread witness = new NodeThread("witness", hashMap);
 		hashMap.put("sender", sender);
 		hashMap.put("receiver", receiver);
-		hashMap.put("witness",witness);
-		buildDHT();
+		hashMap.put("witness",witness); */
+		
+		// instead of making every function static I have made an object of the class
+		// and called the functions on the object
+		
+		DriverProgram dp = new DriverProgram();
+		
+		for(int i=1;i<=5;i++) {
+			dp.hashMap.put(String.valueOf(i), new NodeThread(String.valueOf(i), dp.hashMap));
+		}
+		dp.initialize();
+		for(int i=1;i<=5;i++) {
+			NodeThread temp = dp.hashMap.get(String.valueOf(i));
+			temp.copyList(dp.txnList);
+			temp.start();
+		}
+		
+		dp.buildDHT();
+		
 		//sender.putDHTValue("sender", sender.pubKey);
 		//receiver.putDHTValue("receiver", receiver.pubKey);
 		//witness.putDHTValue("witness", witness.pubKey);
-		witness.putDHTValue("demo","demo");
+		/* witness.putDHTValue("demo","demo");
 		sender.start();
 		receiver.start();
 		witness.start();
@@ -74,30 +98,17 @@ public class DriverProgram {
 		witness.getDHTValue("sender");
 		witness.getDHTValue("demo");
 		witness.getDHTValue("demo");
-		//sender.commitTransaction();
-		new DriverProgram();
+		//sender.commitTransaction(); */
 	}
-	
-	
-	/* public void createARequest() {
 
-		n=4;
-		nodeList=new NodeThread[n];
-		for(int i=0;i<n;i++)
-			nodeList[i]=new NodeThread("Node"+Integer.toString(i+1),nodeList);
-		buildDHT();		
-		Request myRequest = new Request();
-		myRequest.genericRequest();
-		requestQueue.add(myRequest);
-		try {
-			Thread.currentThread().sleep(500); //added otherwise Main thread was notifying too early before other threads called wait()
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+	private void initialize() {
+		int mapSize = hashMap.size();
+		long txId = 1;
+		for(int i=1;i<=mapSize;i++) {
+			txnList.add(Transaction.getDummyTransaction(hashMap.get(String.valueOf(i)).pubKey, 100.0, txId , String.valueOf(i)));
+			txId++;
+			
 		}
-		synchronized(requestQueue) {
-			requestQueue.notifyAll();
-		}
-	} */
+	}
 	
 }

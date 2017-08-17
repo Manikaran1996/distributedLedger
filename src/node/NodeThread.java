@@ -1,6 +1,8 @@
 package node;
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import node.Request.RequestCodes;
@@ -10,6 +12,8 @@ import transaction.Transaction;
 public class NodeThread extends Thread {
 	
 	private BlockingQueue<Request> mailBox;
+	private LinkedList<Transaction> txnList;
+	private long txnId;
 	String DHTprev="";
 	String DHTnext="";
 	String DHTcurr="";
@@ -18,37 +22,26 @@ public class NodeThread extends Thread {
 	HashMap<String,String> DHTable;
 	HashMap<String, NodeThread> threadMap;
 	private CommitThread commitThread;
-	//DHT functions
-	private static final BigInteger DHT_MAX=new BigInteger("10000000000000000000000000000000000000000",16); //=2**160
+	
+	//The linkedList of Transaction contains the initial transactions which needs to be copied to the transaction list of the node
 	public NodeThread(String threadName, HashMap<String, NodeThread> map) {
 		super(threadName);
 		mailBox = new LinkedBlockingQueue<Request>();
 		DHTable = new HashMap<String,String>();
+		txnList = new LinkedList<Transaction>();
 		threadMap = map;
 		commitThread = null;
 		DHTcurr=getName();
 		security=new Security();
 		pubKey=security.getPublicKey();
 		priKey=security.getPrivateKey();
-		}
+	}
 	
 
 	
 	public void run() {
-		/*try {
-			synchronized(DriverProgram.requestQueue) {
-				DriverProgram.requestQueue.wait();
-				Request r = DriverProgram.requestQueue.peek();
-				if(r.getRequestCode() == RequestCodes.DEFAULT) {
-					System.out.println("Hello I am a thread and my name is " + getName());
-				}
-			getDHTValue("Node"+(DHTcurr+4));
-			}
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
 		putDHTValue(DHTcurr,pubKey);
+		printTransactionTable();
 		do {
 			Request request;
 			try {
@@ -123,7 +116,8 @@ public class NodeThread extends Thread {
 			aBigInteger=new BigInteger(security.bytesToString(security.getHash(currNode)),16);
 			bBigInteger=new BigInteger(security.bytesToString(security.getHash(threadMap.get(currNode).DHTnext)),16);
 		}while(true);
-		}
+	}
+	
 	synchronized public void getDHTValue(String keyVal) {
 		String reqNode=DHTFindNode(keyVal);
 		Request r =new Request();
@@ -135,7 +129,8 @@ public class NodeThread extends Thread {
 		//String temp= threadMap.get(reqNode).DHTable.get(keyVal);
 		//System.out.println(reqNode + "returns value of "+keyVal+ " as "+temp);
 		//return temp;
-		}
+	}
+	
 	synchronized public void putDHTValue(String key,String Value) {
 		String reqNode=DHTFindNode(key);
 		Request r= new Request();
@@ -145,7 +140,7 @@ public class NodeThread extends Thread {
 		r.setMessage(Value);
 		threadMap.get(reqNode).putRequest(r);//threadMap.get(reqNode).DHTable.put(keyVal,Value);
 		//System.out.println(reqNode + "stored value of "+DHTcurr+ " as "+Value);
-		} 
+	} 
 	
 	public String query(String nodeName) {
 		return null;
@@ -160,4 +155,21 @@ public class NodeThread extends Thread {
 		
 	}
 
+	public void copyList(LinkedList<Transaction> initialList) {
+		Iterator<Transaction> it = initialList.iterator();
+		while(it.hasNext()) {
+			txnList.add(it.next());
+		}
+		txnId = initialList.size()+1; // plus 1 because the next txn id should be 1 more than the last transaction's id
+	}
+	
+	private void printTransactionTable() {
+		/*Iterator<Transaction> it = txnList.iterator();
+		while(it.hasNext()) {
+			System.out.println("Thread Number : " + getName());
+			System.out.println(it.next());
+			System.out.println();
+		}*/
+		System.out.println("Thread Number : " + getName() + "\n Hash : " + txnList.hashCode());
+	}
 }

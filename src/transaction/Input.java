@@ -37,4 +37,9 @@ public class Input {
 	byte[] getSignature() {
 		return signature;
 	}
+	
+	//TODO
+	public String toString() {
+		return "";
+	}
 }
