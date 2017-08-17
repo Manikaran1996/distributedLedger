@@ -1,12 +1,14 @@
-package node;
+package transaction;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 public class Transaction {
 	private long txnId;
 	private String digitalSignature, receiver, sender, witness;
 	private double amount;
-	private LinkedList<Transaction> input;
+	private ArrayList<Input> inputList;
+	private int inCounter, outCounter;
+	private ArrayList<Output> outputList;
 	
 	public long getTransactionId() {
 		return txnId;
@@ -32,16 +34,15 @@ public class Transaction {
 		return digitalSignature;
 	}
 	
-	public LinkedList<Transaction> getInputList() {
-		return input;
+	public ArrayList<Input> getInputList() {
+		return inputList;
 	}
 	
-	public void createTransaction(long id, String rec, String sen, String wit, Double amt, LinkedList<Transaction> input, String sig) {
+	public void createTransaction(long id, String rec, String sen, String wit, Double amt, String sig) {
 		txnId = id;
 		receiver = rec;
 		sender = sen;
 		amount = amt;
-		this.input = input;
 		digitalSignature = sig;
 		
 	}

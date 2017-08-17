@@ -2,6 +2,8 @@ package node;
 
 import java.util.Scanner;
 
+import transaction.Transaction;
+
 public class Request {
 	enum RequestCodes {SEARCH, VERIFY, TWO_PHASE,  ADD_KEY, DEFAULT, TWO_PHASE_REPLY, COMMIT};
 	private String to;

@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import node.Request.RequestCodes;
 import node.TwoPhaseProtocol.MessageCodes;
+import transaction.Transaction;
 
 public class NodeThread extends Thread {
 	
@@ -141,101 +142,6 @@ public class NodeThread extends Thread {
 	public String verify(Transaction t) {
 		return null;
 	}
-	
-	/* public boolean commitTransaction() {
-		// Start Two phase protocol
-		Request prepareMessageReceiver = TwoPhaseProtocol.getPrepareMessage(getName(), "receiver"); // hard-coding for now, will be using DHT.
-		Request prepareMessageWitness = TwoPhaseProtocol.getPrepareMessage(getName(), "witness"); // hard-coding for now, will be using DHT.
-		NodeThread receiver = threadMap.get("receiver");
-		NodeThread witness = threadMap.get("witness");
-		receiver.putRequest(prepareMessageReceiver);
-		witness.putRequest(prepareMessageWitness);
-		boolean receiverReady = false, witnessReady = false;
-		Thread.sleep(2000);
-		Request temp = mailBox.poll(5, TimeUnit.SECONDS);
-		if(temp == null) {
-			//abort
-		}
-		else {
-			if(temp.getRecipient() == getName()) {
-				if(temp.getRequestCode() == RequestCodes.TWO_PHASE) {
-					if(temp.getMessage().equals(String.valueOf(MessageCodes.READY)))
-						receiverReady = true;
-				}
-				else {
-					// take the required action
-				}
-			}
-		}
-		while(iterator.hasNext() && (!receiverReady || !witnessReady)) {
-				Request temp = iterator.next();
-				if(temp.getRecipient() == getName() && temp.getRequestCode() == RequestCodes.TWO_PHASE) {
-					String messageFrom = temp.getSender();
-					if(messageFrom.equals("receiver")) {
-						iterator.remove();
-						
-						else
-							break;
-					}
-					else if(messageFrom.equals("witness")) {
-						if(temp.getMessage().equals(String.valueOf(MessageCodes.READY)))
-							witnessReady = true;
-						else
-							break;
-					}
-				}
-				
-			}
-
-			System.out.println(DriverProgram.requestQueue.peek());
-			if(!receiverReady || !witnessReady) {	// in case of time out or if any of the receiver or witness replies with NOT_READY
-				Request abortMessageReceiver = TwoPhaseProtocol.getAbortMessage(getName(), "receiver");
-				Request abortMessageWitness = TwoPhaseProtocol.getAbortMessage(getName(), "witness");
-				DriverProgram.requestQueue.add(abortMessageWitness);
-				DriverProgram.requestQueue.add(abortMessageReceiver);
-				// TODO - complete
-			}
-			else {
-				System.out.println("Got Ready Message from the sender and the witness");
-				Request commitMessageReceiver = TwoPhaseProtocol.getCommitMessage(getName(), "receiver");
-				Request commitMessageWitness = TwoPhaseProtocol.getCommitMessage(getName(), "witness");
-				DriverProgram.requestQueue.add(commitMessageReceiver);
-				DriverProgram.requestQueue.add(commitMessageWitness);
-				iterator = DriverProgram.requestQueue.iterator();
-				boolean receiverCommit = false, witnessCommit = false;
-				while(iterator.hasNext() && (!receiverCommit || !witnessCommit)) {
-					Request temp = iterator.next();
-					if(temp.getRecipient() == getName() && temp.getRequestCode() == RequestCodes.TWO_PHASE) {
-						String messageFrom = temp.getSender();
-						if(messageFrom.equals("receiver")) {
-							iterator.remove();
-							if(temp.getMessage().equals(String.valueOf(MessageCodes.ACK_COMMIT)))
-								receiverCommit = true;
-							else
-								break;
-						}
-						else if(messageFrom.equals("witness")) {
-							if(temp.getMessage().equals(String.valueOf(MessageCodes.ACK_COMMIT)))
-								witnessCommit = true;
-							else
-								break;
-						}
-					}
-				}
-				if(!receiverCommit || !witnessCommit) {
-					System.out.println("The transaction can not be committed as receiver of sender has not acknowledged");
-				}
-				else {
-					System.out.println("Transaction can be commited");
-				}
-			}
-			
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return false;
-	} */
 	
 	private void commitTransaction(String rec, String wit) { 
 		commitThread = new CommitThread(getName(), rec, wit, this, threadMap.get(rec), threadMap.get(wit));
