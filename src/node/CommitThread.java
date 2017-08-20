@@ -6,7 +6,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import node.TwoPhaseProtocol.MessageCodes;
-
+/* uncomment when changed
 public class CommitThread extends Thread {
 
 	String committer, receiver, witness;
@@ -125,4 +125,4 @@ public class CommitThread extends Thread {
 			e.printStackTrace();
 		}
 	}
-}
+}*/

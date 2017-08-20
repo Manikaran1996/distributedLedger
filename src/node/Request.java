@@ -1,10 +1,10 @@
 package node;
-
+import java.io.Serializable;
 import java.util.Scanner;
 
 import transaction.Transaction;
 
-public class Request {
+public class Request implements Serializable{
 	enum RequestCodes {SEARCH, VERIFY, TWO_PHASE,  ADD_KEY,SEARCH_REPLY, DEFAULT, TWO_PHASE_REPLY, COMMIT};
 	private String to;
 	private RequestCodes requestCode;
