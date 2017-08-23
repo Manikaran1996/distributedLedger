@@ -1,4 +1,7 @@
 package node;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.math.BigInteger;
@@ -14,6 +17,7 @@ import node.TwoPhaseProtocol.MessageCodes;
 import transaction.Transaction;
 
 public class NodeThread extends Thread {
+	public static final String FILENAME="/home/mininet/project/init.txt";
 	public static final int PORT=6666; // change as required 
 	private LinkedList<Transaction> txnList;
 	private long txnId;
@@ -23,18 +27,34 @@ public class NodeThread extends Thread {
 	//private CommitThread commitThread; add when changed
 	public DHT dht;
 	//The linkedList of Transaction contains the initial transactions which needs to be copied to the transaction list of the node
-	public NodeThread(String threadName, HashMap<String, String> map) {
+	public NodeThread(String threadName) {
 		super(threadName);
 		txnList = new LinkedList<Transaction>();
-		threadMap = map;
 		//commitThread = null;
 		security=new Security();
 		pubKey=security.getPublicKey();
 		priKey=security.getPrivateKey();
-		dht=new DHT(threadName, map);
+		buildThreadMap();
+		dht=new DHT(threadName, threadMap);
 		start();
 	}
-	
+	private void buildThreadMap() {
+		FileReader fr;
+		threadMap=new HashMap<String, String>();
+		try {
+			fr = new FileReader(new File(FILENAME));
+			BufferedReader br=new BufferedReader(fr);
+			String cLineString;
+			while((cLineString=br.readLine())!=null) {
+				String _t[]=cLineString.split(":");
+				threadMap.put(_t[0], _t[1]);
+			}
+			br.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	
 	public void run() {
