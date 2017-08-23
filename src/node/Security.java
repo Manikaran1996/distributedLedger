@@ -35,7 +35,6 @@ public class Security {
 			MessageDigest md = MessageDigest.getInstance("SHA1");
 			hash = md.digest(msg.getBytes());
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		

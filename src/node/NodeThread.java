@@ -1,16 +1,12 @@
 package node;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import node.Request.RequestCodes;
-import node.TwoPhaseProtocol.MessageCodes;
 import transaction.Transaction;
 
 public class NodeThread extends Thread {
@@ -59,30 +55,9 @@ public class NodeThread extends Thread {
 				}
 				else if(request.getRequestCode()==RequestCodes.SEARCH) {
 					new DHThread("DHThread",getName(),dht,client,request);
-				}/*
-				else if(request.getRecipient() == getName()) {
-					if(request.getRequestCode() == RequestCodes.TWO_PHASE) {
-						if(request.getMessage().equals(String.valueOf(MessageCodes.PREPARE))) {
-							Request readyReply = TwoPhaseProtocol.getReadyMessage(getName(), request.getSender());
-							NodeThread t = threadMap.get(request.getSender());
-							t.putRequest(readyReply);
-						}
-						else if(request.getMessage().equals(String.valueOf(MessageCodes.COMMIT))) {
-							Request commitReply = TwoPhaseProtocol.getCommitAckMessage(getName(), request.getSender());
-							NodeThread t = threadMap.get(request.getSender());
-							t.putRequest(commitReply);
-						}
-					}
-					else if(request.getRequestCode() == RequestCodes.TWO_PHASE_REPLY) {
-						if(commitThread != null) {
-							commitThread.putRequest(request);
-						}
-					}
-				}*/
-			} /*catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} */catch (IOException e) {
+				}
+				
+			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {

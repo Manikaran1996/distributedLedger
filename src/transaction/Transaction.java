@@ -12,6 +12,12 @@ public class Transaction {
 	private int inCounter, outCounter;
 	private ArrayList<Output> outputList;
 	private int nodeId;
+	private boolean coinBase;
+	
+	public Transaction() {
+		coinBase = false;
+	}
+	
 	public long getTransactionId() {
 		return txnId;
 	}
@@ -40,6 +46,44 @@ public class Transaction {
 		return inputList;
 	}
 	
+	public ArrayList<Output> getOutputList() {
+		return outputList;
+	}
+	
+	public boolean isCoinbasedTxn() {
+		return coinBase;
+	}
+	
+	public void setSender(String sen) {
+		sender = sen;
+	}
+	
+	public void setReceiver(String rcvr) {
+		receiver = rcvr;
+	}
+	
+	public void setWitness(String wit) {
+		witness = wit;
+	}
+	
+	public void setTransactionId(long txnId) {
+		this.txnId = txnId;
+	}
+	
+	public void setInputValues(ArrayList<Input> inputList) {
+		this.inputList = inputList;
+		inCounter = inputList.size();
+	}
+	
+	public void setOutputValues(ArrayList<Output> outList) {
+		this.outputList = outList;
+		outCounter = outList.size();
+	}
+	
+	public void setNodeId(int id) {
+		nodeId = id;
+	}
+	
 	public void createTransaction(long id, String rec, String sen, String wit, Double amt, String sig) {
 		receiver = rec;
 		sender = sen;
@@ -63,6 +107,7 @@ public class Transaction {
 		out.setValue(bitcoins);
 		txn.outputList = new ArrayList<Output>();
 		txn.outputList.add(out);
+		txn.coinBase = true;
 		return txn;
 	}
 	
@@ -91,5 +136,13 @@ public class Transaction {
 			builder.append(outputList.get(i-1));
 		}
 		return builder.toString();
+	}
+
+	public int getInputCounter() {
+		return inCounter;
+	}
+
+	public int getOutputCounter() {
+		return outCounter;
 	}
 }
