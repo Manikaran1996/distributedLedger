@@ -2,12 +2,17 @@ package node;
 
 import java.io.File;
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
+import java.util.Base64;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -61,11 +66,18 @@ public class Security {
 		return bytesToString(privateKey.getEncoded()); //earlier toString was returning extra information than the key itself 
 	}
 	
-	public String getPublicKey() {
+	/*public String getPublicKey() {
 		if(publicKey == null) {
 			generateKeyPair();
 		}
 		return bytesToString(publicKey.getEncoded()); //earlier toString was returning extra information than the key itself
+	}*/
+	
+	public String getPublicKey() {
+		if(publicKey == null) {
+			generateKeyPair();
+		}
+		return Base64.getEncoder().encodeToString(publicKey.getEncoded());
 	}
 	
 	private byte[] encrypt (byte[] plainText) {
@@ -75,19 +87,34 @@ public class Security {
 			cipher.init(Cipher.ENCRYPT_MODE, privateKey);
 			cipherTextBytes = cipher.doFinal(plainText);
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (NoSuchPaddingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalBlockSizeException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (BadPaddingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InvalidKeyException e) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return cipherTextBytes;
+	}
+	
+	private byte[] encrypt (byte[] plainText, PrivateKey priK) {
+		byte[] cipherTextBytes = null;
+		try {
+			Cipher cipher = Cipher.getInstance("RSA");
+			cipher.init(Cipher.ENCRYPT_MODE, priK);
+			cipherTextBytes = cipher.doFinal(plainText);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e) {
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
 			e.printStackTrace();
 		}
 		return cipherTextBytes;
@@ -100,19 +127,14 @@ public class Security {
 			cipher.init(Cipher.DECRYPT_MODE, publicKey);
 			plainTextBytes = cipher.doFinal(cipherText);
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (NoSuchPaddingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InvalidKeyException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalBlockSizeException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (BadPaddingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -120,7 +142,35 @@ public class Security {
 		
 	}
 	
-	public byte[] createDigest(String msg) {
+	private byte[] decrypt(byte[] cipherText, PublicKey pubK) {
+		byte[] plainTextBytes = null;
+		try {
+			Cipher cipher = Cipher.getInstance("RSA");
+			cipher.init(Cipher.DECRYPT_MODE, pubK);
+			plainTextBytes = cipher.doFinal(cipherText);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e) {
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			e.printStackTrace();
+		}
+		
+		return plainTextBytes;
+		
+	}
+	
+	public byte[] createSignature(String msg, PrivateKey pk, PublicKey pubK) {
+		byte[] hash = getHash(msg);
+		byte[] encryptedHash = encrypt(hash, pk);
+		return encryptedHash;
+	}
+	
+	public byte[] createSignature(String msg) {
 		byte[] hash = getHash(msg);
 		byte[] encryptedHash = encrypt(hash);
 		return encryptedHash;
@@ -134,6 +184,14 @@ public class Security {
 		return false;
 	}
 	
+	public boolean verifySignature(String msg, byte[] signature, PublicKey pubK) {
+		byte[] hash = decrypt(signature, pubK);
+		byte[] msgHash = getHash(msg);
+		if(Arrays.equals(hash, msgHash))
+			return true;
+		return false;
+	}
+	
 	public static String bytesToString(byte[] msg) {
 		StringBuffer buffer = new StringBuffer("");
 		for(int i=0;i<msg.length;i++) {
@@ -143,16 +201,22 @@ public class Security {
 		return buffer.toString();
 	}
 	
-	//TODO
-	public boolean saveKey() {
-		String path = "/home/manikaran/M.tech/Software Lab/Nodes/" + nodeName;
-		File dir = new File(path);
-		boolean created = false;
-		if(!dir.exists())
-			created = dir.mkdirs();
-		
-		return true;
+	public static PublicKey getPublicKeyFromString(String pubKey) {
+		byte[] publicBytes = Base64.getDecoder().decode(pubKey);
+		X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
+		KeyFactory keyFactory;
+		PublicKey publicKey = null;
+		try {
+			keyFactory = KeyFactory.getInstance("RSA");
+			publicKey = keyFactory.generatePublic(keySpec);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			e.printStackTrace();
+		}
+		return publicKey;
 	}
+	
 	public static void main(String[] args) {
 		Security testObject = new Security();
 		String msg = "Hello, this is the trial msg";

@@ -1,16 +1,27 @@
 package transaction;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import node.Security;
+
 public class UTXO {
 	static HashMap<String, ArrayList<Output> > outputList;
 	
+	static void initialize() {
+		outputList = new HashMap<String, ArrayList<Output>>();
+	}
+	
 	static void addToUnspentTxnList(String txnId, ArrayList<Output> val) {
-		outputList.put(txnId, val);
+		if(outputList != null)
+			outputList.put(txnId, val);
+		else initialize();
 	}
 	
 	static boolean checkIfUnspent(String txnId, int index) {
@@ -52,7 +63,8 @@ public class UTXO {
 	private static int getIndex(byte[] senderPubKeyHash, ArrayList<Output> outputs) {
 		int size = outputs.size();
 		for(int i=0;i<size;i++) {
-			if(outputs.get(i).getHash().equals(senderPubKeyHash)) {
+			if(Arrays.equals(outputs.get(i).getHash(), senderPubKeyHash)) {
+				System.out.println("hello");
 				return i;
 			}
 		}
@@ -60,8 +72,10 @@ public class UTXO {
 	}
 	
 	//TODO
-	static Entries getInputList(byte[] senderPubKeyHash, double val) {
+	static Entries getInputList(String transactionMessage, String pubK, PrivateKey priK, double val) {
 		double amount = 0;
+		byte[] senderPubKeyHash = new Security().getHash(pubK);
+		PublicKey pubKey = Security.getPublicKeyFromString(pubK);
 		Set<Map.Entry<String,ArrayList<Output>> > set = outputList.entrySet();
 		Iterator<Map.Entry<String,ArrayList<Output>> > iterator = set.iterator();
 		ArrayList<Input> inputs = new ArrayList<Input>();
@@ -74,8 +88,8 @@ public class UTXO {
 				Input in = new Input();
 				in.setIndex(index);
 				in.setPrevTransaction(Long.parseLong(temp.getKey()));
-				// TODO set public key and the signature
-				in.setScriptSig(null, null);
+				if(priK != null)
+					in.createScriptSig(transactionMessage, pubKey, priK);
 				inputs.add(in);
 				if(amount >= val)
 					break;
@@ -112,5 +126,9 @@ public class UTXO {
 				return outputs.get(i).getValue();
 		}
 		return 0;
+	}
+	
+	public static Output getOutputOf(String txnId, int ind) {
+		return outputList.get(txnId).get(ind);
 	}
 }

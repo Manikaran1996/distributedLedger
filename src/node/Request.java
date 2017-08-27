@@ -4,8 +4,9 @@ import java.util.Scanner;
 
 import transaction.Transaction;
 
-public class Request implements Serializable{
-	enum RequestCodes {SEARCH, VERIFY, TWO_PHASE,  ADD_KEY,SEARCH_REPLY, DEFAULT, TWO_PHASE_REPLY, COMMIT};
+public class Request implements Serializable {
+	final static long serialVersionUID = 123456789;
+	enum RequestCodes {SEARCH, VERIFY, TWO_PHASE,  ADD_KEY,SEARCH_REPLY, DEFAULT, TWO_PHASE_REPLY, COMMIT, TRANSACTION};
 	private String to;
 	private RequestCodes requestCode;
 	/* 

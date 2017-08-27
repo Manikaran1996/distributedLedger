@@ -1,61 +1,72 @@
 package transaction;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import node.Security;
 
 public class TransactionManager {
-	static ArrayList<Transaction> transactionList;
+	public static ArrayList<Transaction> transactionList;
 	public TransactionManager() {	
 	}
 	
+	public static void initialize() {
+		transactionList = new ArrayList<Transaction>();
+		UTXO.initialize();
+	}
 	public static void addTransaction(Transaction t) {
 		transactionList.add(t);
 		UTXO.addToUnspentTxnList(String.valueOf(t.getTransactionId()), t.getOutputList());
+		System.out.println(t.hashCode() + " added to the list ");
 		// remove from UTXO
+		//System.out.println("\n" + t +"\n");
 	}
 	
 	
 	public static Transaction createTransaction(int id, long txnId,  String sen, String rec, 
-			String wit,	String senderPubKey, String rcvrKey, double val) {
+			String wit,	String senderPubKey, String rcvrKey, double val, PrivateKey pk) {
 		Transaction t = new Transaction();
 		Security sec = new Security();
+		t.setSender(sen);
+		t.setWitness(wit);
+		t.setReceiver(rec);
+		t.setNodeId(id);
+		t.setTransactionId(txnId);
 		byte[] senderPubKeyHash = sec.getHash(senderPubKey);
 		//Creating input arrayList
-		UTXO.Entries entry = UTXO.getInputList(senderPubKeyHash, val);
+		UTXO.Entries entry = UTXO.getInputList(t.getTransactionAsMessage(), senderPubKey, pk,  val);
 		double sumAmount = entry.getAmount();
 		ArrayList<Input> in = entry.getInputList();
 		if(sumAmount < val) {
+			System.out.println("You have unsufficient balance (" + sumAmount +"), So transaction can not be proceeded.");
 			return null;
 		}
 		t.setInputValues(in);
 		//Creating output arrayList
 		Output out = new Output();
 		out.setValue(val);
-		out.setHash(sec.getHash(rcvrKey));
+		if(rcvrKey != null)
+			out.setHash(sec.getHash(rcvrKey));
 		out.setIndex(0);
 		ArrayList<Output> outputs = new ArrayList<Output>();
 		outputs.add(out);
 		if(sumAmount > val) {
 			Output changeOutput = new Output();
-			changeOutput.setHash(senderPubKeyHash);
+			if(senderPubKeyHash != null)
+				changeOutput.setHash(senderPubKeyHash);
 			changeOutput.setIndex(1);
 			changeOutput.setValue(sumAmount-val);
 			outputs.add(changeOutput);
 		}
 		t.setOutputValues(outputs);
-		//Setting other parameters of the transaction
-		t.setSender(sen);
-		t.setWitness(wit);
-		t.setReceiver(rec);
-		t.setNodeId(id);
-		t.setTransactionId(txnId);
 		return t;
 	}
 	
 	public static boolean verifyTransaction(Transaction t) {
 		if(t.isCoinbasedTxn())
-			return true;	// Cryptographic verification on output is to be done
+			return true;
 		ArrayList<Output> outputList = t.getOutputList();
 		ArrayList<Input> inputList = t.getInputList();
 		int numOfInputs = t.getInputCounter();
@@ -65,11 +76,11 @@ public class TransactionManager {
 		boolean unspent = true;
 		for(int i=0;i<numOfInputs;i++) {
 			Input in = inputList.get(i);
-			if(!UTXO.checkIfUnspent(String.valueOf(in.getPrevTransactionNum()), in.getIndex())) {
+			if(!UTXO.checkIfUnspent(String.valueOf(in.getPrevTransactionId()), in.getIndex())) {
 				unspent = false;
 				break;
 			}
-			inSum += UTXO.getAmount(String.valueOf(in.getPrevTransactionNum()), in.getIndex());
+			inSum += UTXO.getAmount(String.valueOf(in.getPrevTransactionId()), in.getIndex());
 		}
 		if(!unspent)
 			return false;
@@ -77,13 +88,26 @@ public class TransactionManager {
 		for(int i=0;i<numOfOutputs;i++) {
 			outSum += outputList.get(i).getValue();
 		}
-		if(outSum > inSum)
+		if(outSum != inSum)
 			return false;
-		else
-			return true; // until cryptographic verification is to be implemented
-		//TODO Cryptographic verification
-		
-		//return false;
+		Security s = new Security();
+		/*for(Input in : inputList) {
+			Output out = UTXO.getOutputOf(String.valueOf(in.getPrevTransactionId()), in.getIndex());
+			byte[] prevOutputRecHash = out.getHash();
+			PublicKey pubKey = in.getPublicKey();
+			byte[] sig = in.getSignature();
+			byte[] currentInPubKeyHash = s.getHash(Security.bytesToString(pubKey.getEncoded()));
+			if(Arrays.equals(prevOutputRecHash, currentInPubKeyHash)) {
+				if(s.verifySignature(t.getTransactionAsMessage(), sig, pubKey)) {
+					return true;
+				}
+				else break;
+			}
+			else
+				break;
+			
+		}*/
+		return true;
 	}
 
 	public static int getHashCode() {

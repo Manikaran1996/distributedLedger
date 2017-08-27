@@ -1,9 +1,16 @@
 package transaction;
 
+import java.io.Serializable;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 
-public class Input {
-	
+import node.Security;
+
+public class Input implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3312467074814794412L;
 	private long prevTransaction;
 	private int index;
 	private PublicKey pubKey;
@@ -22,7 +29,12 @@ public class Input {
 		pubKey = pk;
 	}
 	
-	long getPrevTransactionNum() {
+	void createScriptSig(String transactionMessage, PublicKey pubK, PrivateKey pk) {
+		pubKey = pubK;
+		signature = new Security().createSignature(transactionMessage, pk, pubK);
+	}
+	
+	long getPrevTransactionId() {
 		return prevTransaction;
 	}
 	

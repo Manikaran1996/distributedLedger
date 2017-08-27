@@ -18,8 +18,7 @@ import java.util.Iterator;
 import java.util.Scanner;
 import java.util.Set;
 public class DriverProgram {
-	public static final String FILENAME="/home/mininet/project/init.txt";
-
+	
 	private HashMap<String,String> hashMap = new HashMap<String, String>();
 	private LinkedList<Transaction> txnList;
 	public DriverProgram() {
@@ -31,25 +30,9 @@ public class DriverProgram {
 		// and called the functions on the object
 		
 		DriverProgram dp = new DriverProgram();
-		//---------------reading file for obtaining nodename -> ip address mapping 
-		FileReader fr;
-		try {
-			fr = new FileReader(new File(FILENAME));
-			BufferedReader br=new BufferedReader(fr);
-			String cLineString;
-			while((cLineString=br.readLine())!=null) {
-				String _t[]=cLineString.split(":");
-				dp.hashMap.put(_t[0], _t[1]);
-			}
-			br.close();
-		} 
-		catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		System.out.println(dp.hashMap);
 		//creating the NodeThread using name given on command line 
-		NodeThread myThread = new NodeThread(args[0],dp.hashMap);
+		NodeThread myThread = new NodeThread(args[0]);
 		//for DHT testing purpose
 		Scanner s=new Scanner(System.in);
 		while(s.hasNext()) {

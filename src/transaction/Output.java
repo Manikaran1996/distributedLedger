@@ -1,11 +1,17 @@
 package transaction;
 
+import java.io.Serializable;
+
 import node.Security;
 
-public class Output {
-	double value;
-	byte[] hashOfReceiverKey;
-	int index;
+public class Output implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 487859790383385000L;
+	private double value;
+	private byte[] hashOfReceiverKey;
+	private int index;
 	
 	public double getValue() {
 		return value;

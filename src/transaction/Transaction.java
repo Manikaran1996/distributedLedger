@@ -1,57 +1,29 @@
 package transaction;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import node.Security;
 
-public class Transaction {
+public class Transaction implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3959822816295112067L;
 	private long txnId;
-	private String digitalSignature, receiver, sender, witness;
+	private String receiver, sender, witness;
 	private double amount;
 	private ArrayList<Input> inputList;
 	private int inCounter, outCounter;
 	private ArrayList<Output> outputList;
 	private int nodeId;
 	private boolean coinBase;
+	byte[] digitalSignature;
 	
 	public Transaction() {
 		coinBase = false;
-	}
-	
-	public long getTransactionId() {
-		return txnId;
-	}
-	
-	public String getReceiver() {
-		return receiver;
-	}
-	
-	public String getSender() {
-		return sender;
-	}
-	
-	public String getWitness() {
-		return witness;
-	}
-	
-	public Double getAmount() {
-		return amount;
-	}
-	
-	public String getDigitalSignature() {
-		return digitalSignature;
-	}
-	
-	public ArrayList<Input> getInputList() {
-		return inputList;
-	}
-	
-	public ArrayList<Output> getOutputList() {
-		return outputList;
-	}
-	
-	public boolean isCoinbasedTxn() {
-		return coinBase;
+		digitalSignature = null;
 	}
 	
 	public void setSender(String sen) {
@@ -84,12 +56,60 @@ public class Transaction {
 		nodeId = id;
 	}
 	
-	public void createTransaction(long id, String rec, String sen, String wit, Double amt, String sig) {
-		receiver = rec;
-		sender = sen;
-		amount = amt;
-		digitalSignature = sig;
-		txnId = id; 
+	public int getInputCounter() {
+		return inCounter;
+	}
+
+	public int getOutputCounter() {
+		return outCounter;
+	}
+	
+	public long getTransactionId() {
+		return txnId;
+	}
+	
+	public String getReceiver() {
+		return receiver;
+	}
+	
+	public String getSender() {
+		return sender;
+	}
+	
+	public String getWitness() {
+		return witness;
+	}
+	
+	public Double getAmount() {
+		return amount;
+	}
+	
+	public ArrayList<Input> getInputList() {
+		return inputList;
+	}
+	
+	public ArrayList<Output> getOutputList() {
+		return outputList;
+	}
+	
+	public boolean isCoinbasedTxn() {
+		return coinBase;
+	}
+	
+	public String getTransactionAsMessage() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(txnId);
+		builder.append(nodeId);
+		builder.append(sender);
+		builder.append(receiver);
+		builder.append(witness);
+		//builder.append(inCounter);
+		/*for(Input in : inputList)
+			builder.append(in.toString());
+		builder.append(outCounter);
+		for(Output out : outputList)
+			builder.append(out); */
+		return builder.toString();
 	}
 	
 	public static Transaction getDummyTransaction(String receiverPublicKey, double bitcoins, long id, String receiver) {
@@ -103,7 +123,8 @@ public class Transaction {
 		txn.txnId = id;
 		txn.nodeId = 0;
 		Output out = new Output();
-		out.setHash(new Security().getHash(receiverPublicKey));
+		if(receiverPublicKey != null)
+			out.setHash(new Security().getHash(receiverPublicKey));
 		out.setValue(bitcoins);
 		txn.outputList = new ArrayList<Output>();
 		txn.outputList.add(out);
@@ -137,12 +158,10 @@ public class Transaction {
 		}
 		return builder.toString();
 	}
-
-	public int getInputCounter() {
-		return inCounter;
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(txnId, receiver, sender, witness, amount, inputList, outputList, nodeId);
 	}
 
-	public int getOutputCounter() {
-		return outCounter;
-	}
 }
