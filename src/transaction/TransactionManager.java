@@ -85,6 +85,7 @@ public class TransactionManager {
 			}
 			inSum += UTXO.getAmount(String.valueOf(in.getPrevTransactionId()), in.getIndex());
 		}
+
 		if(!unspent)
 			return false;
 		//If sum of output amount is less than the input then "False Transaction"

@@ -19,11 +19,9 @@ public class Transaction implements Serializable {
 	private ArrayList<Output> outputList;
 	private int nodeId;
 	private boolean coinBase;
-	byte[] digitalSignature;
 	
 	public Transaction() {
 		coinBase = false;
-		digitalSignature = null;
 	}
 	
 	public void setSender(String sen) {

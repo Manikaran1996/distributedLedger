@@ -3,18 +3,21 @@ package node;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
+import node.RequestTransaction.Result;
 import transaction.Transaction;
 
 public class TwoPhaseCommit extends Thread {
 	
 	private ObjectOutputStream recOutStream, witOutStream;
 	private ObjectInputStream recInStream, witInStream;
-	private Boolean done;
+	private Result done;
 	private Transaction txn;
+	private Object lock;
 	public TwoPhaseCommit(String name, ObjectOutputStream recO, ObjectOutputStream witO, 
-			ObjectInputStream recI, ObjectInputStream witI, Transaction t, Boolean res) {
+			ObjectInputStream recI, ObjectInputStream witI, Transaction t, Result res, Object lock) {
 		super(name);
 		recOutStream = recO;
 		recInStream = recI;
@@ -22,6 +25,7 @@ public class TwoPhaseCommit extends Thread {
 		witInStream = witI;
 		txn = t;
 		done = res;
+		this.lock = lock;
 		start();
 	}
 	
@@ -32,19 +36,11 @@ public class TwoPhaseCommit extends Thread {
 			witOutStream.writeObject(txn);
 			//Thread.sleep(2000); // waiting for receiver and witness to verify the transaction
 			// communication
-			byte[] rec = new byte[100], wit = new byte[100];
 			recOutStream.writeInt(1);
 			witOutStream.writeInt(1);
 			recOutStream.flush();
 			witOutStream.flush();
-			//recOutStream.writeUTF("PREPARE");
-			//witOutStream.writeUTF("PREPARE");
 			System.out.println("Prepare Message Sent");
-			/*recInStream.read(rec);
-			witInStream.read(wit);
-			String recReply = new String(rec);
-			String witReply = new String(wit);
-			System.out.println(recReply + witReply);*/
 			
 			int prepReplyRec = recInStream.readInt();
 			int prepReplyWit = witInStream.readInt();
@@ -59,54 +55,37 @@ public class TwoPhaseCommit extends Thread {
 				int recReply = recInStream.readInt();
 				int witReply = witInStream.readInt();
 				if(recReply == 4 && witReply == 4) {
-					//TODO broadcast the transaction here
-					done = true;
+					synchronized(lock) {
+						done.setTrue();
+						lock.notify();
+					}
 					System.out.println("Transaction Committed!!");
-				}
-				
-			}
-			
-			/*
-			
-			if(recReply.toUpperCase().equals("READY") && witReply.toUpperCase().equals("READY")) {
-				System.out.println("Ready Message Received");
-				Thread.sleep(2000);
-				recOutStream.write("COMMIT".getBytes());
-				witOutStream.write("COMMIT".getBytes());
-				recOutStream.flush();
-				witOutStream.flush();
-				System.out.println("Commit Message Sent");
-				Thread.sleep(2000);
-				recInStream.read(rec);
-				witInStream.read(wit);
-				recReply = new String(rec);
-				witReply = new String(wit);
-				if(recReply.toUpperCase().equals("ACK") && witReply.toUpperCase().equals("ACK")) {
-					//TODO broadcast the transaction here
-					done = true;
-					System.out.println("Transaction Committed!!");
-				}
-				System.out.println("Transaction aborted21!!");
+				}				
 			}
 			else {
-				recOutStream.write("ABORT".getBytes());
-				witOutStream.write("ABORT".getBytes());
+				recOutStream.writeInt(6);	// send abort
+				witOutStream.writeInt(6);	// send abort
 				recOutStream.flush();
 				witOutStream.flush();
-				recInStream.read(rec);
-				witInStream.read(wit);
-				recReply = new String(rec);
-				witReply = new String(wit);
-				if(recReply.toUpperCase().equals("ACK") && witReply.toUpperCase().equals("ACK")) {
+				int recReply = recInStream.readInt();
+				int witReply = witInStream.readInt();
+				if(recReply == 7 && witReply == 7) {
+					synchronized(lock) {
+						done.setFalse();
+						lock.notify();
+					}
 					System.out.println("Transaction aborted!!");
-				}
-				done = false;
-				
-			}*/
+				}			
+			}
 		
 		} catch (UnknownHostException e) {
+			done.notify();
 			e.printStackTrace();
+		} catch(SocketTimeoutException e) {
+			done.notify();
+			
 		} catch (IOException e) {
+			done.notify();
 			e.printStackTrace();
 		} 
 	
