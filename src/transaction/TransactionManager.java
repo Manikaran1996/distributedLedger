@@ -18,9 +18,12 @@ public class TransactionManager {
 	}
 	public static void addTransaction(Transaction t) {
 		transactionList.add(t);
-		UTXO.addToUnspentTxnList(String.valueOf(t.getTransactionId()), t.getOutputList());
-		System.out.println(t.hashCode() + " added to the list ");
-		// remove from UTXO
+		
+		UTXO.addToUnspentTxnList(String.valueOf(t.getTransactionId()) + "," + t.getNodeId(), t.getOutputList());
+		System.out.println(t.getTransactionId() + " added to the list ");
+		if(!t.isCoinbasedTxn())
+			for(Input i: t.getInputList())
+				UTXO.removeOutput(i.getPrevTransactionId(),i.getIndex());
 		//System.out.println("\n" + t +"\n");
 	}
 	

@@ -92,6 +92,10 @@ public class Transaction implements Serializable {
 		return outputList;
 	}
 	
+	public int getNodeId() {
+		return nodeId;
+	}
+	
 	public boolean isCoinbasedTxn() {
 		return coinBase;
 	}

@@ -47,6 +47,7 @@ public class RequestTransaction extends Thread {
 				if(result) {
 					System.out.println("Transaction sent");
 				}
+				Main.txnId++;
 			}
 			catch(Exception e) {
 				System.out.println(e.getMessage());

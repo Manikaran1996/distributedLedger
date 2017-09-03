@@ -64,7 +64,6 @@ public class UTXO {
 		int size = outputs.size();
 		for(int i=0;i<size;i++) {
 			if(Arrays.equals(outputs.get(i).getHash(), senderPubKeyHash)) {
-				System.out.println("hello");
 				return i;
 			}
 		}
@@ -87,7 +86,7 @@ public class UTXO {
 				amount += out.getValue();
 				Input in = new Input();
 				in.setIndex(index);
-				in.setPrevTransaction(Long.parseLong(temp.getKey()));
+				in.setPrevTransaction(temp.getKey());
 				if(priK != null)
 					in.createScriptSig(transactionMessage, pubKey, priK);
 				inputs.add(in);

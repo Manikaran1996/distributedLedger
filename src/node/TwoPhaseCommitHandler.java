@@ -22,17 +22,17 @@ public class TwoPhaseCommitHandler extends Thread {
 	public void run() {
 		try {
 			Transaction t = (Transaction) inStream.readObject();
-			System.out.println("Transaction Object read");
+			//System.out.println("Transaction Object read");
 			boolean res = TransactionManager.verifyTransaction(t);
 			if(res) {
-				System.out.println("Ready for Two phase");
+				//System.out.println("Ready for Two phase");
 				byte[] b = new byte[100];
 				//inStream.read(b);
 				//String reply = new String(b); 
 				int rep = inStream.readInt();
 				System.out.println(rep);
 				if(rep == 1) {
-					System.out.println(getName() + " Received Prepare message");
+					//System.out.println(getName() + " Received Prepare message");
 					outStream.writeInt(2);
 					outStream.flush();
 					int reply = inStream.readInt();
@@ -40,6 +40,7 @@ public class TwoPhaseCommitHandler extends Thread {
 						System.out.println(getName() + " Received Commit message");
 						outStream.writeInt(4);
 						outStream.flush();
+						TransactionManager.addTransaction(t);
 					}
 				}
 				else {
@@ -50,7 +51,7 @@ public class TwoPhaseCommitHandler extends Thread {
 			else {
 				if(inStream.readUTF().equals("PREPARE")) {
 
-					System.out.println(getName() + "Received Prepare message");
+					//System.out.println(getName() + "Received Prepare message");
 					outStream.writeUTF("NO");
 					if(inStream.readUTF().equals("ABORT")) {
 						outStream.writeUTF("ACK");

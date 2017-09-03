@@ -92,7 +92,7 @@ public class NodeThread extends Thread {
 				}
 				
 				else if(request.getRequestCode() == RequestCodes.TRANSACTION) {
-					System.out.println(getName() + " : Request Received");
+					//System.out.println(getName() + " : Request Received");
 					Thread.sleep(5000);
 					Transaction t = (Transaction) inputStream.readObject();
 					//System.out.println(t);
@@ -103,7 +103,7 @@ public class NodeThread extends Thread {
 					new DHThread("DHThread",getName(),dht,client,request);
 				}
 				else if(request.getRequestCode() == RequestCodes.TWO_PHASE) {
-					System.out.println("Two Phase Request Received");
+					//System.out.println("Two Phase Request Received");
 					new TwoPhaseCommitHandler("2PhaseHandler", inputStream, out);
 				}
 				

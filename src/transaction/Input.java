@@ -11,12 +11,12 @@ public class Input implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -3312467074814794412L;
-	private long prevTransaction;
+	private String prevTransaction;
 	private int index;
 	private PublicKey pubKey;
 	private byte[] signature;
 
-	void setPrevTransaction(long tx) {
+	void setPrevTransaction(String tx) {
 		prevTransaction = tx;
 	}
 	
@@ -34,7 +34,7 @@ public class Input implements Serializable {
 		signature = new Security().createSignature(transactionMessage, pk, pubK);
 	}
 	
-	long getPrevTransactionId() {
+	String getPrevTransactionId() {
 		return prevTransaction;
 	}
 	

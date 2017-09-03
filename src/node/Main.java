@@ -12,11 +12,12 @@ public class Main {
 			"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCCYNP4ZpfG45x33zhemA86MEZGOd6OeYevlaYfUlBTp2y9LUcKWlimSDOGSPqXicxiHSxLenhTiI8WTZDpQAYx4ZDBFFRtHJSSCEAflrl4qvZqR5WXysCwr/APZhV+pXa1ja7Y/kAicMhMwXW6lcU0Ew2j4Ynjuubd4wQrQBy7lQIDAQAB",
 			"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCGKvI1bZ0cIPEnKUG9nmv6T3xIrSklbeAq7zjdjViYB59EKXs1U9IlqIQD+YGqx/psvyt8gaApbGQ1AM9Itct09K+avRjNhZuhvqyD8EHrdjQtehIFdX/PiybR/8mlgCyIyQyqB8DtU5z8cGntyImGMQ8xkNXI9u2sgp2gauwrswIDAQAB",
 			"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCIeHgMXysmgxQEedNs9BsdV3KM4qcEon3Dtc+VrzjOAl0tj9tm6ndCChwZw8ulfH7rstkKVsGDHXHWBCqKdRv4kViYihyJIgp4BlhnoV2Awgn4GQCMVZZXdPQvEuErbi/RIdmCwW2jC2L5TQThjUW70sBNTXorTXSPIWm3mC5gGwIDAQAB" };
+	public static int txnId;
 	public static void main(String[] args) {
 		final int id = Integer.parseInt(args[0]);
 		final int numOfNodes = 4;
 		PrivateKey pk = null;
-		int txnId = 1;
+		txnId = 1;
 		TransactionManager.initialize();
 		for(int i=1;i<=numOfNodes;i++) {
 			TransactionManager.addTransaction(Transaction.getDummyTransaction(pubKeys[i-1], 100.0, txnId , String.valueOf(i)));
