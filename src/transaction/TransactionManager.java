@@ -64,6 +64,7 @@ public class TransactionManager {
 			outputs.add(changeOutput);
 		}
 		t.setOutputValues(outputs);
+		System.out.println(t);
 		return t;
 	}
 	
@@ -75,19 +76,25 @@ public class TransactionManager {
 		int numOfInputs = t.getInputCounter();
 		int numOfOutputs = t.getOutputCounter();
 		double outSum = 0, inSum = 0;
+		System.out.println("Input : ");
+		System.out.println(inputList);
 		// Check if input transactions are there in UTXO
 		boolean unspent = true;
 		for(int i=0;i<numOfInputs;i++) {
 			Input in = inputList.get(i);
+			System.out.print(in.getPrevTransactionId());
 			if(!UTXO.checkIfUnspent(String.valueOf(in.getPrevTransactionId()), in.getIndex())) {
 				unspent = false;
 				break;
 			}
 			inSum += UTXO.getAmount(String.valueOf(in.getPrevTransactionId()), in.getIndex());
 		}
+		System.out.println("unspent : " + unspent);
 
-		if(!unspent)
+		if(!unspent) {
+			System.out.println(UTXO.outputList);
 			return false;
+		}
 		//If sum of output amount is less than the input then "False Transaction"
 		for(int i=0;i<numOfOutputs;i++) {
 			outSum += outputList.get(i).getValue();

@@ -50,8 +50,10 @@ public class Input implements Serializable {
 		return signature;
 	}
 	
-	//TODO
 	public String toString() {
-		return "";
+		StringBuilder builder = new StringBuilder();
+		builder.append("Prev Txn Id : " + prevTransaction);
+		builder.append("Index : " + index);
+		return builder.toString();
 	}
 }

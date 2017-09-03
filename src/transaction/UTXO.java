@@ -29,6 +29,7 @@ public class UTXO {
 		if(temp == null)
 			return false;
 		else {
+			System.out.println(temp);
 			int size = temp.size();
 			for(int i=0;i<size;i++) {
 				if(temp.get(i).getIndex() == index)
@@ -64,7 +65,7 @@ public class UTXO {
 		int size = outputs.size();
 		for(int i=0;i<size;i++) {
 			if(Arrays.equals(outputs.get(i).getHash(), senderPubKeyHash)) {
-				return i;
+				return outputs.get(i).getIndex();
 			}
 		}
 		return -1;
@@ -82,7 +83,13 @@ public class UTXO {
 			Map.Entry<String, ArrayList<Output>> temp = iterator.next();
 			int index = getIndex(senderPubKeyHash, temp.getValue());
 			if(index != -1) {
-				Output out = temp.getValue().get(index);
+				Output out = null;
+				for(Output o : temp.getValue()) {
+					if(o.getIndex() == index) {
+						out = o;
+						break;
+					}
+				}
 				amount += out.getValue();
 				Input in = new Input();
 				in.setIndex(index);
