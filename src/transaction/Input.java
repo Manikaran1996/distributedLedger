@@ -52,6 +52,9 @@ public class Input implements Serializable {
 	
 	//TODO
 	public String toString() {
-		return "";
+		StringBuilder builder = new StringBuilder();
+		builder.append("Index " + index);
+		builder.append("\nTxn Id : " + prevTransaction);
+		return builder.toString();
 	}
 }

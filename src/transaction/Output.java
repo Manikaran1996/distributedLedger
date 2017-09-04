@@ -33,7 +33,7 @@ public class Output implements Serializable {
 	}
 	
 	public void setIndex(int ind) {
-		ind = index;
+		index = ind;
 	}
 	
 	public String toString() {

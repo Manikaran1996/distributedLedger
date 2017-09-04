@@ -91,8 +91,9 @@ public class UTXO {
 						in.createScriptSig(transactionMessage, pubKey, priK);
 					inputs.add(in);
 					amount += o.getValue();
-					if(amount >= val)
-						break;
+					if(amount >= val) {
+						return new Entries(inputs,amount);
+					}
 				
 				}
 			}
@@ -159,6 +160,11 @@ public class UTXO {
 	}
 	
 	public static Output getOutputOf(String txnId, int ind) {
-		return outputList.get(txnId).get(ind);
+		ArrayList<Output> outList = outputList.get(txnId);
+		for(Output o:outList) {
+			if(o.getIndex() == ind)
+				return o;
+		}
+		return null;
 	}
 }

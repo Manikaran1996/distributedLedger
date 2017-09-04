@@ -29,6 +29,7 @@ public class Broadcast extends Thread {
 	String nodeName;
 	DHT dht;
 	int cnt=0;
+	long mcount=0;
 	NodeThread nt;
 	boolean receivedTranList=false;
 	ArrayList<Message> queue=new ArrayList<Message>();
@@ -58,7 +59,8 @@ public class Broadcast extends Thread {
 					continue;
 				}
 				if(m.deliverable) {
-						m.transaction.setTransactionId(m.timestamp);
+						m.transaction.setTransactionId(++TransactionManager.maxTxnId);
+						//System.out.println("Timestamp : "+m.transaction.getTransactionId());
 						if(TransactionManager.verifyTransaction(m.transaction))	TransactionManager.addTransaction(m.transaction);
 						else System.out.println("/* transaction "+m.transaction.getSender()+" -> " + m.transaction.getReceiver()+ " amt = " +m.transaction.getAmount()+ " is invalid */");
 						queue.remove(0);
@@ -91,7 +93,7 @@ public class Broadcast extends Thread {
 				nodeMap.put(request.getSender(),request.getMessage());
 				dht.buildDHT();
 				if(!receivedTranList) {
-					TransactionManager.copyList(request.getTransactionBackup());
+					mcount=TransactionManager.copyList(request.getTransactionBackup());
 					receivedTranList=true;
 				}
 				}
@@ -105,13 +107,13 @@ public class Broadcast extends Thread {
 			else if(object instanceof Message) {
 				Message message=(Message) object;
 				if(message.type==Message.TYPE.ABCAST_CREATE) {
-					Message m=new Message(++cnt,Integer.valueOf(nodeName),++TransactionManager.maxTxnId,Message.TYPE.ABCAST_REQ,nodeMap.size()-1,message.transaction);
+					Message m=new Message(++cnt,Integer.valueOf(nodeName),++mcount,Message.TYPE.ABCAST_REQ,nodeMap.size()-1,message.transaction);
 					broadcastMessage(m);
 					queue.add(m);
 				}
 				else if(message.type==Message.TYPE.ABCAST_REQ && !nodeName.equals(String.valueOf(message.sender))) {
 					long timeS=message.timestamp;
-					if(timeS<(1+TransactionManager.maxTxnId)) timeS=++TransactionManager.maxTxnId;
+					if(timeS<(1+mcount)) timeS=++mcount;
 					
 					Message m=new Message(message.messNumber,message.sender,timeS,Message.TYPE.ABCAST_REPLY,0,message.transaction);
 					putMessage(m,String.valueOf(message.sender));
@@ -127,7 +129,7 @@ public class Broadcast extends Thread {
 							if(t.replyCnt==0) {
 								t.deliverable=true;
 								Collections.sort(queue);
-								if(TransactionManager.maxTxnId<t.timestamp) TransactionManager.maxTxnId=t.timestamp;
+								if(mcount<t.timestamp) mcount=t.timestamp;
 								t.type=Message.TYPE.ABCAST_ACK;
 								broadcastMessage(t);
 							}
@@ -143,7 +145,7 @@ public class Broadcast extends Thread {
 							if(t.timestamp<message.timestamp) t.timestamp=message.timestamp;
 							t.deliverable=true;
 							Collections.sort(queue);
-							if(TransactionManager.maxTxnId<t.timestamp) TransactionManager.maxTxnId=t.timestamp;
+							if(mcount<t.timestamp) mcount=t.timestamp;
 							break;	
 						}
 					}

@@ -56,7 +56,6 @@ public class NodeThread extends Thread {
 			Request request;
 			try {
 				Socket client=mailBox.accept();
-				
 				ObjectInputStream inputStream=new ObjectInputStream(client.getInputStream());
 				request=(Request)inputStream.readObject();
 				if(request.getRequestCode() == RequestCodes.TRANSACTION) {
@@ -82,7 +81,7 @@ public class NodeThread extends Thread {
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
+			} 
 			
 		} while(true);
 	}

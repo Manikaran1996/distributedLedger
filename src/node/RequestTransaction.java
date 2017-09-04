@@ -43,22 +43,28 @@ public class RequestTransaction extends Thread {
 			// Two phase start
 			Socket receiver = null, witness = null;
 			try {
-				//System.out.println(txn);
-				receiver = new Socket(threadMap.get(txn.getReceiver()), NodeThread.PORT);
-				witness = new Socket(threadMap.get(txn.getWitness()), NodeThread.PORT);
-				receiver.setSoTimeout(15000);
-				witness.setSoTimeout(15000);
-				ObjectOutputStream recOut = new ObjectOutputStream(receiver.getOutputStream());
-				recOut.flush();
-				ObjectInputStream recIn = new ObjectInputStream(receiver.getInputStream());
-				ObjectOutputStream witOut = new ObjectOutputStream(witness.getOutputStream());
-				witOut.flush();
-				ObjectInputStream witIn = new ObjectInputStream(witness.getInputStream());
 				Request req = new Request();
 				req.setRequestCode(RequestCodes.TWO_PHASE);
+				//System.out.println(txn);
+				receiver = new Socket(threadMap.get(txn.getReceiver()), NodeThread.PORT);
+				ObjectOutputStream recOut = new ObjectOutputStream(receiver.getOutputStream());
 				recOut.writeObject(req);
+				recOut.flush();
+				witness = new Socket(threadMap.get(txn.getWitness()), NodeThread.PORT);
+				ObjectOutputStream witOut = new ObjectOutputStream(witness.getOutputStream());
 				witOut.writeObject(req);
-				System.out.println("Request sent");
+				witOut.flush();
+				receiver.setSoTimeout(15000);
+				witness.setSoTimeout(15000);
+				witOut.flush();
+				ObjectInputStream recIn = new ObjectInputStream(receiver.getInputStream());
+				//
+				
+				ObjectInputStream witIn = new ObjectInputStream(witness.getInputStream());
+				
+				
+				//recOut.flush();
+				//System.out.println("Request sent");
 				Result result = new Result();
 				result.setFalse();
 				new TwoPhaseCommit("2Phase", recOut, witOut, recIn, witIn, txn, result,lock);
@@ -66,8 +72,8 @@ public class RequestTransaction extends Thread {
 				lock.wait();
 				}
 				if(result.getValue()) {
-					TransactionManager.addTransaction(txn);
-					System.out.println("Transaction sent");
+					broadcast.broadcastTransaction((txn));
+					//System.out.println("Transaction broadcasted");
 					}
 				else {
 				System.out.println("Aborted");
@@ -76,7 +82,6 @@ public class RequestTransaction extends Thread {
 				witIn.close();
 				recOut.close();
 				witOut.close();
-				System.out.println("Transaction sent");
 				/*Request r1=(Request)recIn.readObject();
 				Request r2=(Request) witIn.readObject();
 				if(r1.getMessage().equals("YES") && r2.getMessage().equals("YES")) broadcast.broadcastTransaction(txn);

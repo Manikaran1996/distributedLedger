@@ -22,7 +22,7 @@ public class TransactionManager {
 	}
 	public static void addTransaction(Transaction t) {
 		transactionList.add(t);
-		System.out.println(t.getTransactionId());
+		//System.out.println(t.getTransactionId());
 		System.out.println("/* "+t.getSender()+" has sent "+t.getAmount()+" bitcoins to "+t.getReceiver()+"*/");
 		UTXO.addToUnspentTxnList(String.valueOf(t.getTransactionId()), t.getOutputList());
 		//System.out.println(t.hashCode() + " added to the list ");
@@ -31,7 +31,7 @@ public class TransactionManager {
 						for(Input i: t.getInputList())
 							UTXO.removeOutput(String.valueOf(i.getPrevTransactionId()),i.getIndex());
 		//System.out.println("\n" + t +"\n");
-		System.out.println(UTXO.outputList);
+		//System.out.println(UTXO.outputList);
 	}
 	
 	
@@ -75,12 +75,13 @@ public class TransactionManager {
 		return t;
 	}
 	//copyList is used to copy transaction list when nodes are already running
-	public static void copyList(List<Transaction> initialList) {
+	public static long copyList(List<Transaction> initialList) {
 		Iterator<Transaction> it = initialList.iterator();
 		transactionList.clear(); //delete previous entries
 		while(it.hasNext()) {
 			addTransaction(it.next());	
 		} if(transactionList.size()!=0) maxTxnId=transactionList.get(transactionList.size()-1).getTransactionId(); 
+		return 0;
 		}
 		
 	
@@ -98,7 +99,7 @@ public class TransactionManager {
 		for(int i=0;i<numOfInputs;i++) {
 			Input in = inputList.get(i);
 			if(!UTXO.checkIfUnspent(String.valueOf(in.getPrevTransactionId()), in.getIndex())) {
-				System.out.println("Invalid 1");
+				//System.out.println("Invalid 1");
 				unspent = false;
 				break;
 			}
@@ -112,7 +113,7 @@ public class TransactionManager {
 		}
 		if(outSum != inSum) {
 			
-			System.out.println("Invalid 2");	
+			//System.out.println("Invalid 2\n" + t);	
 			return false;
 			}
 		Security s = new Security();

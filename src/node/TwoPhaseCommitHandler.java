@@ -22,17 +22,17 @@ public class TwoPhaseCommitHandler extends Thread {
 	
 	public void run() {
 		try {
-			/*Random random=new Random();
-			double p=random.nextDouble();
-			Request request=new Request();
-			if(p<=0.1) request.setMessage("NO");
-			else request.setMessage("YES");
-			outStream.writeObject(request);*/
 			Transaction t = (Transaction) inStream.readObject();
 			
 			//System.out.println("Transaction Object read");
 			boolean res = TransactionManager.verifyTransaction(t);
+			Random random=new Random();
+			double p=random.nextDouble();
+			if(p<=0.05) res=false;
+			
 			int rep=inStream.readInt();
+
+			//System.out.println(getName() + " : " + res + " : " + rep);
 			if(res) {
 				//System.out.println("Ready for Two phase");
 				if(rep == 1) {
@@ -43,6 +43,10 @@ public class TwoPhaseCommitHandler extends Thread {
 					if(reply == 3) {
 						//System.out.println(getName() + " Received Commit message");
 						outStream.writeInt(4);
+						outStream.flush();
+					}
+					else if(reply == 6) {
+						outStream.writeInt(7);
 						outStream.flush();
 					}
 				}

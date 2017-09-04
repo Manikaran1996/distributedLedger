@@ -45,7 +45,7 @@ public class DHT{
 				
 			}
 		}
-		System.out.println("Thread map: "+nodeMap.size());
+		//System.out.println("Thread map: "+nodeMap.size());
 		//System.out.println("DHT order: "+Arrays.toString(ordList));
 		String succ=ordList[(dHTcurr+1)%n];
 		if(dhc!=null) dhc.stopFlag=true;

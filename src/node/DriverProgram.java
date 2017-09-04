@@ -26,6 +26,7 @@ public class DriverProgram {
 		//creating the NodeThread using name given on command line 
 		NodeThread myThread = new NodeThread(args[0],args[1]);
 		PrivateKey pk = myThread.priKey;
+		System.out.println("Starting ...");
 		try {
 			Thread.currentThread().sleep(500*(Integer.parseInt(args[2])));
 		}

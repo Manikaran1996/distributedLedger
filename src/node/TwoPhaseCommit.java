@@ -40,7 +40,7 @@ public class TwoPhaseCommit extends Thread {
 			witOutStream.writeInt(1);
 			recOutStream.flush();
 			witOutStream.flush();
-			System.out.println("Prepare Message Sent");
+			//System.out.println("Prepare Message Sent");
 			
 			int prepReplyRec = recInStream.readInt();
 			int prepReplyWit = witInStream.readInt();
@@ -87,8 +87,8 @@ public class TwoPhaseCommit extends Thread {
 				System.out.println("Transaction aborted21!!");
 			}*/
 			else {
-				recOutStream.write("ABORT".getBytes());
-				witOutStream.write("ABORT".getBytes());
+				recOutStream.writeInt(6);
+				witOutStream.writeInt(6);
 				recOutStream.flush();
 				witOutStream.flush();
 				int recReply = recInStream.readInt();
