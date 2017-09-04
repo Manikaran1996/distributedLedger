@@ -29,7 +29,6 @@ public class UTXO {
 		if(temp == null)
 			return false;
 		else {
-			System.out.println(temp);
 			int size = temp.size();
 			for(int i=0;i<size;i++) {
 				if(temp.get(i).getIndex() == index)
@@ -65,6 +64,7 @@ public class UTXO {
 		int size = outputs.size();
 		for(int i=0;i<size;i++) {
 			if(Arrays.equals(outputs.get(i).getHash(), senderPubKeyHash)) {
+				//System.out.println("hello");
 				return outputs.get(i).getIndex();
 			}
 		}
@@ -81,29 +81,53 @@ public class UTXO {
 		ArrayList<Input> inputs = new ArrayList<Input>();
 		while(iterator.hasNext()) {
 			Map.Entry<String, ArrayList<Output>> temp = iterator.next();
-			int index = getIndex(senderPubKeyHash, temp.getValue());
-			if(index != -1) {
-				Output out = null;
-				for(Output o : temp.getValue()) {
-					if(o.getIndex() == index) {
-						out = o;
+			ArrayList<Output> out = temp.getValue();
+			for(Output o: out) {
+				if(Arrays.equals(senderPubKeyHash, o.getHash())) {
+					Input in = new Input();
+					in.setIndex(o.getIndex());
+					in.setPrevTransaction(Long.parseLong(temp.getKey()));
+					if(priK != null)
+						in.createScriptSig(transactionMessage, pubKey, priK);
+					inputs.add(in);
+					amount += o.getValue();
+					if(amount >= val)
 						break;
-					}
+				
 				}
-				amount += out.getValue();
-				Input in = new Input();
-				in.setIndex(index);
-				in.setPrevTransaction(temp.getKey());
-				if(priK != null)
-					in.createScriptSig(transactionMessage, pubKey, priK);
-				inputs.add(in);
-				if(amount >= val)
-					break;
 			}
 		}
 		return new Entries(inputs,amount);
 	}
-	
+	static public double getBalance(String pubK) {
+		double amount = 0;
+		byte[] senderPubKeyHash = new Security().getHash(pubK);
+		Set<Map.Entry<String,ArrayList<Output>> > set = outputList.entrySet();
+		Iterator<Map.Entry<String,ArrayList<Output>> > iterator = set.iterator();
+		while(iterator.hasNext()) {
+			Map.Entry<String, ArrayList<Output>> temp = iterator.next();
+			ArrayList<Output> out = temp.getValue();
+			for(Output o: out) {
+				if(Arrays.equals(senderPubKeyHash, o.getHash())) {
+					amount += o.getValue();
+				}
+			}
+			/*int index = getIndex(senderPubKeyHash, temp.getValue());
+			if(index != -1) {
+				//Output out = temp.getValue().get(index);
+				Output out = null;
+				for(Output o : temp.getValue()) {
+					if(o.getIndex() == index && Arrays.equals(senderPubKeyHash, o.getHash())) {
+						out = o;
+						//break;
+						amount += out.getValue();
+					}
+				}
+				amount += out.getValue();
+			}*/
+		}
+		return amount;
+	}
 	static class Entries {
 		ArrayList<Input> inputs;
 		double amount;

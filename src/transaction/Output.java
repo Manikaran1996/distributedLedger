@@ -33,14 +33,13 @@ public class Output implements Serializable {
 	}
 	
 	public void setIndex(int ind) {
-		index = ind;
+		ind = index;
 	}
 	
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("Value : " + value);
-		builder.append("\nHash : " + Security.bytesToString(hashOfReceiverKey));
-		builder.append("Index : " + index);
+		if(hashOfReceiverKey!=null)builder.append("\nHash : " + Security.bytesToString(hashOfReceiverKey));
 		return builder.toString();
 	}
 }

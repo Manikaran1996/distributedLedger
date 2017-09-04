@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-
 public class DHThread extends Thread {
 	DHT d;
 	String nodeName;

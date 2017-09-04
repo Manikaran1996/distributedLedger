@@ -1,140 +1,90 @@
 package node;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.PrivateKey;
 import java.util.HashMap;
-import java.util.LinkedList;
 import node.Request.RequestCodes;
 import transaction.Transaction;
+import transaction.TransactionManager;
 
 public class NodeThread extends Thread {
-	public static final String FILENAME="/home/mininet/project/init.txt";
-	public static int PORT=5555; // change as required 
-	final int ports[] = new int[] {5555,5557,8888,9999};
-	private LinkedList<Transaction> txnList;
-	String pubKey,priKey; //added data member to store keys
+	public static final int PORT=6666; // change as required 
+	String pubKey;
+	PrivateKey priKey; //added data member to store keys
 	Security security; //to use hash/key generation
 	HashMap<String, String> threadMap; // now threadMap stores name->IP address mapping
 	//private CommitThread commitThread; add when changed
 	public DHT dht;
+	Broadcast broadcast;
+	private String IP;
+	private String nodeName;
 	//The linkedList of Transaction contains the initial transactions which needs to be copied to the transaction list of the node
-	public NodeThread(String threadName) {
+	public NodeThread(String threadName,String myIP) {
 		super(threadName);
-		txnList = new LinkedList<Transaction>();
 		//commitThread = null;
 		security=new Security();
 		pubKey=security.getPublicKey();
 		priKey=security.getPrivateKey();
-		buildThreadMap();
-		dht=new DHT(threadName, threadMap);
-		start();
-	}
-	
-	public NodeThread(String threadName, int id) {
-		super(threadName);
-		txnList = new LinkedList<Transaction>();
-		//commitThread = null;
-		security=new Security();
-		pubKey=security.getPublicKey();
-		priKey=security.getPrivateKey();
-		buildThreadMap();
-		PORT = ports[id];
-		dht=new DHT(threadName, threadMap);
-		start();
-	}
-	
-	private void buildThreadMap() {
-		FileReader fr;
+		IP=myIP;
+		nodeName=threadName;
 		threadMap=new HashMap<String, String>();
-		try {
-			fr = new FileReader(new File(FILENAME));
-			BufferedReader br=new BufferedReader(fr);
-			String cLineString;
-			while((cLineString=br.readLine())!=null) {
-				String _t[]=cLineString.split(":");
-				threadMap.put(_t[0], _t[1]);
-			}
-			br.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		threadMap.put(nodeName,IP);
+		dht=new DHT(threadName, threadMap,this);
+		broadcast=new Broadcast("br thread", threadMap, dht, threadName,this);
+		start();
 	}
-
 	
 	public void run() {
-		dht.putValue(getName(),pubKey);;
+		Request m=new Request();
+		m.setSender(nodeName);
+		m.setRequestCode(RequestCodes.INIT);
+		m.setMessage(IP);
+		broadcast.broadcastMessage(m);	
 		ServerSocket mailBox=null;
 		try {
 			mailBox=new ServerSocket(PORT);
-			System.out.println(getName() + " : listening on " + PORT);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		dht.putValue(nodeName,pubKey);
 		//printTransactionTable(); uncomment when update 
 		do {
 			Request request;
 			try {
 				Socket client=mailBox.accept();
-				Thread.sleep(5000);
-				ObjectInputStream inputStream=new ObjectInputStream(client.getInputStream());
-				ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
-				out.flush();
-				request=(Request)inputStream.readObject();
-				//inputStream.close();
-				if(request.getRequestCode() == RequestCodes.COMMIT) {
-					commitTransaction("receiver", "witness");
-				}
 				
-				else if(request.getRequestCode() == RequestCodes.TRANSACTION) {
-					//System.out.println(getName() + " : Request Received");
-					Thread.sleep(5000);
+				ObjectInputStream inputStream=new ObjectInputStream(client.getInputStream());
+				request=(Request)inputStream.readObject();
+				if(request.getRequestCode() == RequestCodes.TRANSACTION) {
 					Transaction t = (Transaction) inputStream.readObject();
-					//System.out.println(t);
 					new ServiceTransaction("requestHandler", t);
 				}
-				
+				else if(request.getRequestCode()==RequestCodes.ADD_KEY) {
+					String temp[]=request.getMessage().split(":");
+					dht.dHTableHashMap.put(temp[0],temp[1]);
+				}
 				else if(request.getRequestCode()==RequestCodes.SEARCH) {
 					new DHThread("DHThread",getName(),dht,client,request);
 				}
+
 				else if(request.getRequestCode() == RequestCodes.TWO_PHASE) {
 					//System.out.println("Two Phase Request Received");
+					ObjectOutputStream out=new ObjectOutputStream(client.getOutputStream());
 					new TwoPhaseCommitHandler("2PhaseHandler", inputStream, out);
 				}
-				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				System.out.println(e.getMessage());
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} 
+			}
 			
 		} while(true);
 	}
 
-	private void commitTransaction(String rec, String wit) { 
-		//update when changed
-		//commitThread = new CommitThread(getName(), rec, wit, this, threadMap.get(rec), threadMap.get(wit));
-		
-	}
-	
-	private void printTransactionTable() {
-		/*Iterator<Transaction> it = txnList.iterator();
-		while(it.hasNext()) {
-			System.out.println("Thread Number : " + getName());
-			System.out.println(it.next());
-			System.out.println();
-		}*/
-		System.out.println("Thread Number : " + getName() + "\n Hash : " + txnList.hashCode());
-	}
 }

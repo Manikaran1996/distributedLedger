@@ -1,12 +1,12 @@
 package node;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Scanner;
 
 import transaction.Transaction;
 
-public class Request implements Serializable {
-	final static long serialVersionUID = 123456789;
-	enum RequestCodes {SEARCH, VERIFY, TWO_PHASE,  ADD_KEY,SEARCH_REPLY, DEFAULT, TWO_PHASE_REPLY, COMMIT, TRANSACTION};
+public class Request implements Serializable{
+	enum RequestCodes {SEARCH, VERIFY, TWO_PHASE,  ADD_KEY,SEARCH_REPLY, DEFAULT, TWO_PHASE_REPLY, COMMIT,TRANSACTION,INIT,INIT_REPLY,PING,FAILURE};
 	private String to;
 	private RequestCodes requestCode;
 	/* 
@@ -17,9 +17,15 @@ public class Request implements Serializable {
 			4 			add public key 		
 	 */
 	private String message;
-	private Transaction txn;
+	private List<Transaction> tl;
 	private String sender;
 	
+	public void setTransactionBackup(List<Transaction> l) {
+		tl=l;
+	}
+	public List<Transaction> getTransactionBackup() {
+		return tl;
+	}
 	public void setRecipient(String to) {
 		this.to= to;
 	}
@@ -52,13 +58,6 @@ public class Request implements Serializable {
 		return requestCode;
 	}
 	
-	public void createTransactionRequest(Transaction txn) {
-		Scanner sc = new Scanner(System.in);
-		System.out.print("To : ");
-		to = sc.next();
-		this.txn = txn;;
-	}
-	
 	public void createSearchKeyRequest() {
 		requestCode = RequestCodes.SEARCH;
 	
@@ -71,6 +70,8 @@ public class Request implements Serializable {
 		StringBuilder builder = new StringBuilder();
 		builder.append("To : ");
 		builder.append(to);
+		builder.append("From : ");
+		builder.append(sender);
 		builder.append("Request Code : ");
 		builder.append(requestCode);
 		builder.append("Message : ");

@@ -59,11 +59,11 @@ public class Security {
 		}
 	}
 	
-	public String getPrivateKey() {
+	public PrivateKey getPrivateKey() {
 		if(privateKey == null) {
 			generateKeyPair();
 		}
-		return bytesToString(privateKey.getEncoded()); //earlier toString was returning extra information than the key itself 
+		return privateKey; //earlier toString was returning extra information than the key itself 
 	}
 	
 	/*public String getPublicKey() {

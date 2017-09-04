@@ -11,12 +11,12 @@ public class Input implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -3312467074814794412L;
-	private String prevTransaction;
+	private long prevTransaction;
 	private int index;
 	private PublicKey pubKey;
 	private byte[] signature;
 
-	void setPrevTransaction(String tx) {
+	void setPrevTransaction(long tx) {
 		prevTransaction = tx;
 	}
 	
@@ -34,7 +34,7 @@ public class Input implements Serializable {
 		signature = new Security().createSignature(transactionMessage, pk, pubK);
 	}
 	
-	String getPrevTransactionId() {
+	long getPrevTransactionId() {
 		return prevTransaction;
 	}
 	
@@ -50,10 +50,8 @@ public class Input implements Serializable {
 		return signature;
 	}
 	
+	//TODO
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("Prev Txn Id : " + prevTransaction);
-		builder.append("Index : " + index);
-		return builder.toString();
+		return "";
 	}
 }

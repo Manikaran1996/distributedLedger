@@ -21,6 +21,8 @@ public class DHT{
 	public HashMap<String,String> dHTableHashMap;
 	private int dHTcurr;
 	Security security=new Security();
+	public NodeThread nt;
+	DHTChecker dhc=null;
 	public void buildDHT() {
 		n= nodeMap.size();
 		Set<String> namesSet=nodeMap.keySet(); 
@@ -43,11 +45,18 @@ public class DHT{
 				
 			}
 		}
+		System.out.println("Thread map: "+nodeMap.size());
+		//System.out.println("DHT order: "+Arrays.toString(ordList));
+		String succ=ordList[(dHTcurr+1)%n];
+		if(dhc!=null) dhc.stopFlag=true;
+		if(n!=1) dhc=new DHTChecker(nodeName, this,nodeMap, nt.broadcast,succ,nodeMap.get(succ));
+		
 	}
-	public DHT(String nodeName,HashMap<String, String> hp) {
+	public DHT(String nodeName,HashMap<String, String> hp,NodeThread nt) {
 		dHTableHashMap=new HashMap<String,String>();
 		nodeMap=hp;
 		this.nodeName=nodeName;
+		this.nt=nt;
 		buildDHT();
 		}
 	private String findNode(String key) {
@@ -65,13 +74,30 @@ public class DHT{
 		}while(true);
 	}
 	public void putValue(String key,String value) {
-		dHTableHashMap.put(key, value);
+		String node=findNode(key);
+		try {
+			Socket socket=new Socket(nodeMap.get(node),NodeThread.PORT);
+			ObjectOutputStream objectOutputStream=new ObjectOutputStream(socket.getOutputStream());
+			Request request=new Request();
+			request.setRecipient(node);
+			request.setSender(nodeName);
+			request.setRequestCode(Request.RequestCodes.ADD_KEY);
+			request.setMessage(key+":"+value);
+			objectOutputStream.writeObject(request);
+			socket.close();
+			} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
 	}
 	public String getValue(String key){ 
 		String node=findNode(key);
 		String resString="";
 		try {
-			Socket socket=new Socket(nodeMap.get(node),6666);
+			Socket socket=new Socket(nodeMap.get(node),NodeThread.PORT);
 			ObjectOutputStream objectOutputStream=new ObjectOutputStream(socket.getOutputStream());
 			Request request=new Request();
 			request.setRecipient(node);

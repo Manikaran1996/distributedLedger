@@ -5,32 +5,47 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+
+import javax.naming.spi.DirStateFactory.Result;
 
 import node.Request.RequestCodes;
 import transaction.Transaction;
 import transaction.TransactionManager;
 
 public class RequestTransaction extends Thread {
-	final int ports[] = new int[] {5555,5557,8888,9999};
 	Transaction txn;
+	HashMap<String, String> threadMap;
+	Broadcast broadcast;
 	private Object lock;
-	public RequestTransaction(String threadName, Transaction t) {
+	public RequestTransaction(String threadName, Transaction t,HashMap<String, String> hm,Broadcast b) {
 		super(threadName);
 		txn = t;
-		lock = new Object();
+		threadMap=hm;
+		broadcast=b;
+		lock=new Object();
 		start();
 	}
-	
+	public static class Result {
+				private boolean res;
+				public void setTrue() {
+					res = true;
+				}
+				public void setFalse() {
+					res = false;
+				}
+				public boolean getValue() {
+					return res;
+		 		}
+		 	}
 	public void run() {
-		int rec = Integer.parseInt(txn.getReceiver());
-		int wit = Integer.parseInt(txn.getWitness());
-		try {
-			System.out.println(rec);
+			//System.out.println(rec);
 			// Two phase start
 			Socket receiver = null, witness = null;
 			try {
-				receiver = new Socket("localhost", ports[rec]);
-				witness = new Socket("localhost", ports[wit]);
+				//System.out.println(txn);
+				receiver = new Socket(threadMap.get(txn.getReceiver()), NodeThread.PORT);
+				witness = new Socket(threadMap.get(txn.getWitness()), NodeThread.PORT);
 				receiver.setSoTimeout(15000);
 				witness.setSoTimeout(15000);
 				ObjectOutputStream recOut = new ObjectOutputStream(receiver.getOutputStream());
@@ -43,26 +58,29 @@ public class RequestTransaction extends Thread {
 				req.setRequestCode(RequestCodes.TWO_PHASE);
 				recOut.writeObject(req);
 				witOut.writeObject(req);
-				System.out.println("Request Sent");
+				System.out.println("Request sent");
 				Result result = new Result();
 				result.setFalse();
-				new TwoPhaseCommit("2Phase", recOut, witOut, 
-						recIn, witIn, txn, result,lock);
+				new TwoPhaseCommit("2Phase", recOut, witOut, recIn, witIn, txn, result,lock);
 				synchronized(lock) {
-					lock.wait();
+				lock.wait();
 				}
 				if(result.getValue()) {
 					TransactionManager.addTransaction(txn);
 					System.out.println("Transaction sent");
-				}
+					}
 				else {
-					System.out.println("Aborted");
+				System.out.println("Aborted");
 				}
 				recIn.close();
 				witIn.close();
 				recOut.close();
 				witOut.close();
-				Main.txnId++;
+				System.out.println("Transaction sent");
+				/*Request r1=(Request)recIn.readObject();
+				Request r2=(Request) witIn.readObject();
+				if(r1.getMessage().equals("YES") && r2.getMessage().equals("YES")) broadcast.broadcastTransaction(txn);
+				else System.out.println("/* Receiver or witness aborted 2phase */
 			}
 			catch(Exception e) {
 				System.out.println(e.getMessage());
@@ -79,30 +97,15 @@ public class RequestTransaction extends Thread {
 					e.printStackTrace();
 				}
 			}
-			receiver.close();
-			witness.close();
+			//Thread.sleep(1000);
+			// TODO Two phase to be completed
+			// broadcast
+			
+			//recIn.close();
+			//witIn.close();
+			//recOut.close();
+			//witOut.close();
 		
-		
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	public static class Result {
-		private boolean res;
-		public void setTrue() {
-			res = true;
-		}
-		public void setFalse() {
-			res = false;
-		}
-		public boolean getValue() {
-			return res;
-		}
 	}
 	
 	

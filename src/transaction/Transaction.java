@@ -19,9 +19,11 @@ public class Transaction implements Serializable {
 	private ArrayList<Output> outputList;
 	private int nodeId;
 	private boolean coinBase;
+	byte[] digitalSignature;
 	
 	public Transaction() {
 		coinBase = false;
+		digitalSignature = null;
 	}
 	
 	public void setSender(String sen) {
@@ -39,7 +41,9 @@ public class Transaction implements Serializable {
 	public void setTransactionId(long txnId) {
 		this.txnId = txnId;
 	}
-	
+	public void setAmount(double amt) {
+		amount=amt;
+	}
 	public void setInputValues(ArrayList<Input> inputList) {
 		this.inputList = inputList;
 		inCounter = inputList.size();
@@ -90,10 +94,6 @@ public class Transaction implements Serializable {
 		return outputList;
 	}
 	
-	public int getNodeId() {
-		return nodeId;
-	}
-	
 	public boolean isCoinbasedTxn() {
 		return coinBase;
 	}
@@ -119,11 +119,12 @@ public class Transaction implements Serializable {
 		txn.outCounter = 1;
 		txn.inCounter = 0;
 		txn.inputList = null;
-		txn.sender = null;
+		txn.sender = receiver;
 		txn.witness = null;
 		txn.receiver = receiver;
 		txn.txnId = id;
 		txn.nodeId = 0;
+		txn.amount=bitcoins;
 		Output out = new Output();
 		if(receiverPublicKey != null)
 			out.setHash(new Security().getHash(receiverPublicKey));
